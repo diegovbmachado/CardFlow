@@ -57,12 +57,40 @@ className="fixed inset-y-0 lefet-0 z-10 hidden w-14 border-r bg-background sm:fl
         href="#"
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
         >
-            <ShoppingBag className="h-5 w-5"/>
-            <span className="sr-only">Pedidos</span>
+            <Package className="h-5 w-5"/>
+            <span className="sr-only">Produtos</span>
         </Link>
             </TooltipTrigger>
             <TooltipContent side="right">
-                <p>Pedidos</p>
+                <p>Produtos</p>
+            </TooltipContent>
+        </Tooltip>
+        <Tooltip>
+            <TooltipTrigger asChild>
+            <Link
+        href="#"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+        >
+            <User className="h-5 w-5"/>
+            <span className="sr-only">Clientes</span>
+        </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+                <p>Clientes</p>
+            </TooltipContent>
+        </Tooltip>
+        <Tooltip>
+            <TooltipTrigger asChild>
+            <Link
+        href="#"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+        >
+            <Settings2 className="h-5 w-5"/>
+            <span className="sr-only">Configurações</span>
+        </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+                <p>Configurações</p>
             </TooltipContent>
         </Tooltip>
 
