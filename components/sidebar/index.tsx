@@ -35,6 +35,37 @@ className="fixed inset-y-0 lefet-0 z-10 hidden w-14 border-r bg-background sm:fl
                 <p>Início</p>
             </TooltipContent>
         </Tooltip>
+
+<Tooltip>
+            <TooltipTrigger asChild>
+            <Link
+        href="#"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+        >
+            <ShoppingBag className="h-5 w-5"/>
+            <span className="sr-only">Pedidos</span>
+        </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+                <p>Pedidos</p>
+            </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+            <TooltipTrigger asChild>
+            <Link
+        href="#"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+        >
+            <ShoppingBag className="h-5 w-5"/>
+            <span className="sr-only">Pedidos</span>
+        </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+                <p>Pedidos</p>
+            </TooltipContent>
+        </Tooltip>
+
         </TooltipProvider>
 
 
