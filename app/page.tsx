@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, Users } from "lucide-react";
+import { DollarSign, Percent, Users } from "lucide-react";
 
 export default function Home() {
   return (
@@ -36,6 +36,22 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             <p className="text-base sm:text-lg font-bold" > 234</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-center">
+              <CardTitle className="text-lg sm:text-xl text-gray-800">
+                Pedidos hoje
+              </CardTitle>
+              <Percent className="ml-auto w-4 h-4" />
+            </div>
+            <CardDescription>
+              Total pedidos hoje
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-base sm:text-lg font-bold" > 65</p>
           </CardContent>
         </Card>
       </section>
