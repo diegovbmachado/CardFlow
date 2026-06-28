@@ -26,7 +26,8 @@ const chartConfig = {
 } satisfies ChartConfig
 
   return (
-    <Card className="w-full md:w-1/3 md:max-w-600px">
+    /* marretando tamanho se quiser w-full md:w-1/3 md:max-w-600px */
+    <Card className="flex-1">
       <CardHeader>
         <div className="flex items-center justify-center">
         <CardTitle className="text-lg sm:text-xl text-gray-800">
