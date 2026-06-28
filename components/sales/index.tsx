@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 export  function Sales() {
     return (
         /* marretando tamanho se quiser w-full md:w-1/3 md:max-w-600px */
+        /* marretando tamanho se quiser w-full md:w-1/3 md:max-w-600px */
             <Card className="flex-1">
     
       <CardHeader>
