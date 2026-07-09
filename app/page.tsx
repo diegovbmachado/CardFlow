@@ -1,84 +1,20 @@
+import { CardOverview } from "@/components/card";
 import ChartOverview from "@/components/chart";
 import { Sales } from "@/components/sales";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BadgeDollarSign, DollarSign, Percent, Users } from "lucide-react";
 
 export default function Home() {
   return (
-    <main className="sm:ml-14 -top-4">
-      {/* section esta sendo usado para separar cards por exemplo */}
-      <section  className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-center">
-              <CardTitle className="text-lg sm:text-xl text-gray-600">
-                Total de vendas
-              </CardTitle>
-              <DollarSign className="ml-auto w-4 h-4" />
-            </div>
-            <CardDescription>
-              Total de vendas em 90 dias
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-base sm:text-lg font-bold" > R$ 40.000</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-center">
-              <CardTitle className="text-lg sm:text-xl text-gray-600">
-                Novos clientes
-              </CardTitle>
-              <Users className="ml-auto w-4 h-4" />
-            </div>
-            <CardDescription>
-              Novos clientes em 30 dias
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-base sm:text-lg font-bold" > 234</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-center">
-              <CardTitle className="text-lg sm:text-xl text-gray-800">
-                Pedidos hoje
-              </CardTitle>
-              <Percent className="ml-auto w-4 h-4" />
-            </div>
-            <CardDescription>
-              Total pedidos hoje
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-base sm:text-lg font-bold" > 65</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-center">
-              <CardTitle className="text-lg sm:text-xl text-gray-800">
-                Total pedidos
-              </CardTitle>
-              < BadgeDollarSign className="ml-auto w-4 h-4" />
-            </div>
-            <CardDescription>
-              Total de pedidos em 30 dias
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-base sm:text-lg font-bold" > 2300 </p>
-          </CardContent>
-        </Card>
-
+    // Adicionado p-4 para desgrudar os componentes das bordas da tela
+    <main className="sm:ml-14 p-4 md:p-6">
+      {/* Seção dos Cards: Agora vai funcionar em 2 colunas no celular e 4 no PC */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <CardOverview />
       </section>
-{/* section esta sendo usado para separar grafics por exemplo */}
-      <section className="mt-4 flex flex-cols md:flex-row gap-4" >
-      <ChartOverview />
-      <Sales />
+
+      {/* Seção dos Gráficos: Corrigido para flex-col (celular) e lg:flex-row (telas maiores) */}
+      <section className="mt-4 flex flex-col lg:flex-row gap-4">
+        <ChartOverview />
+        <Sales />
       </section>
     </main>
   );
