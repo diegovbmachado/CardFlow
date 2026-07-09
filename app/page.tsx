@@ -1,21 +1,10 @@
-import { CardOverview } from "@/components/cardoverview";
-import ChartOverview from "@/components/chartoverview";
-import { Sales } from "@/components/sales";
-
-export default function Home() {
+export default function LoginPage() {
   return (
-    // Adicionado p-4 para desgrudar os componentes das bordas da tela
-    <main className="sm:ml-14 p-4 md:p-6">
-      {/* Seção dos Cards: Agora vai funcionar em 2 colunas no celular e 4 no PC */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <CardOverview />
-      </section>
-
-      {/* Seção dos Gráficos: Corrigido para flex-col (celular) e lg:flex-row (telas maiores) */}
-      <section className="mt-4 flex flex-col lg:flex-row gap-4">
-        <ChartOverview />
-        <Sales />
-      </section>
+    <main className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 text-white p-4">
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">💳 CardFlow</h1>
+        <p className="text-zinc-400">Pronto para começar a criar a tela de login amanhã!</p>
+      </div>
     </main>
   );
 }
