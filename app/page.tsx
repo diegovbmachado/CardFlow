@@ -1,5 +1,5 @@
-import { CardOverview } from "@/components/card";
-import ChartOverview from "@/components/chart";
+import { CardOverview } from "@/components/cardoverview";
+import ChartOverview from "@/components/chartoverview";
 import { Sales } from "@/components/sales";
 
 export default function Home() {
