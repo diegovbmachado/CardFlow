@@ -6,7 +6,7 @@ import {
   ChartConfig,
   ChartTooltipContent,
   ChartTooltip,
-} from "../ui/chart";
+} from "../../ui/chart";
 import { Bar, CartesianGrid, XAxis, BarChart } from "recharts";
 
 export default function ChartOverview() {
@@ -18,7 +18,7 @@ export default function ChartOverview() {
     { month: "Maio", desktop: 209, mobile: 130 },
     { month: "Junho", desktop: 214, mobile: 140 },
   ];
-  
+
   const chartConfig = {
     desktop: {
       label: "Desktop",
@@ -55,7 +55,7 @@ export default function ChartOverview() {
               tickFormatter={(value) => value.slice(0, 3)}
             />
             <ChartTooltip content={<ChartTooltipContent />} />
-            
+
             {/* As animações ficam perfeitas aqui dentro: */}
             <Bar
               dataKey="desktop"

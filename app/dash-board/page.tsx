@@ -1,6 +1,6 @@
-import { CardOverview } from "@/components/cardoverview";
-import ChartOverview from "@/components/chartoverview";
-import { Sales } from "@/components/sales";
+import { CardOverview } from "@/components/dashboard/cardoverview";
+import ChartOverview from "@/components/dashboard/chartoverview";
+import { Sales } from "@/components/dashboard/sales";
 
 export default function Home() {
   return (
