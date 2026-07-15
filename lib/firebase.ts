@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider } from "firebase/auth"; // Importamos o GoogleAuthProvider
 
 // Suas credenciais reais obtidas do console do Firebase
 const firebaseConfig = {
@@ -15,5 +15,8 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 
-export { auth };
-// Evita inicializar o Firebase várias vezes durante o recarregamento do Next.js
+// Criamos a instância do provedor do Google
+const googleProvider = new GoogleAuthProvider();
+
+// Exportamos o auth e também o provedor do Google para usar nas telas
+export { auth, googleProvider };

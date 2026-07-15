@@ -4,9 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// Importando a função de login do Firebase e a nossa configuração do auth
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase"; // Ajuste o caminho se a sua pasta "lib" estiver em outro lugar
+// Importando os métodos de login do Firebase e as nossas configurações
+// Adicionamos o "signInWithPopup" e o "googleProvider"
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "@/lib/firebase"; 
 
 // Importando o visual (Shadcn UI)
 import { Button } from "@/components/ui/button"
@@ -26,25 +27,22 @@ import {
 export default function CardDemo() {
   const router = useRouter();
   
-  // Estados para capturar os dados dos inputs, erros e estado de carregamento
+  // Estados para os inputs, erros e carregamento
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 1. Função de login com E-mail e Senha (que já estava funcionando)
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(""); // Limpa erros antigos
-    setLoading(true); // Ativa o estado de carregando
+    setError("");
+    setLoading(true);
 
     try {
-      // Faz o login no Firebase com os dados do estado
       await signInWithEmailAndPassword(auth, email, password);
-      
-      // Se der certo, redireciona para a dashboard
       router.push("/dash-board");
     } catch (err: any) {
-      // Trata erros comuns do Firebase para o usuário entender o que aconteceu
       console.error(err);
       if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found") {
         setError("E-mail ou senha incorretos.");
@@ -54,7 +52,30 @@ export default function CardDemo() {
         setError("Ocorreu um erro ao fazer login. Tente novamente.");
       }
     } finally {
-      setLoading(false); // Desativa o carregamento independente de ter dado certo ou errado
+      setLoading(false);
+    }
+  };
+
+  // 2. NOVA FUNÇÃO: Login com o Google
+  const handleGoogleLogin = async () => {
+    setError("");
+    setLoading(true);
+
+    try {
+      // Abre a janela pop-up de login do Google
+      await signInWithPopup(auth, googleProvider);
+      
+      // Se der certo, redireciona o usuário para a dashboard
+      router.push("/dash-board");
+    } catch (err: any) {
+      console.error("Erro ao logar com Google:", err);
+      
+      // Se o usuário simplesmente fechar a janelinha do Google, não exibimos erro feio
+      if (err.code !== "auth/popup-closed-by-user") {
+        setError("Não foi possível autenticar com o Google. Tente novamente.");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -152,12 +173,13 @@ export default function CardDemo() {
                 {loading ? "Entrando..." : "Login"}
               </Button>
 
+              {/* Botão do Google AGORA ATIVO e conectado com a nova função */}
               <Button
                 type="button"
                 variant="outline"
                 className="w-full text-base sm:text-lg font-bold"
                 disabled={loading}
-                onClick={() => alert("O login com Google ainda não está disponível.")}
+                onClick={handleGoogleLogin}
               >
                 Login com Google
               </Button>
