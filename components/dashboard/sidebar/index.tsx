@@ -57,9 +57,10 @@ export function Sidebar() {
   };
 
   return (
-    <div className="flex w-full flex-col bg-muted/40">
+    <div className="flex w-full flex-col bg-zinc-950">
       {/* SIDEBAR PARA COMPUTADOR (Telas maiores que 'sm') */}
-      <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 border-r bg-background sm:flex flex-col">
+      {/* Fundo alterado para bg-zinc-950 e bordas cinza-escuras */}
+      <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 border-r border-zinc-900 bg-zinc-950 sm:flex flex-col">
         <nav className="flex flex-col items-center gap-4 px-2 py-5">
           <TooltipProvider>
             <Link
@@ -74,13 +75,13 @@ export function Sidebar() {
               <TooltipTrigger asChild>
                 <Link
                   href="#"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:text-white hover:bg-zinc-900"
                 >
                   <Home className="h-5 w-5" />
                   <span className="sr-only">Início</span>
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right">
+              <TooltipContent side="right" className="bg-zinc-900 text-white border-zinc-800">
                 <p>Início</p>
               </TooltipContent>
             </Tooltip>
@@ -89,13 +90,13 @@ export function Sidebar() {
               <TooltipTrigger asChild>
                 <Link
                   href="#"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:text-white hover:bg-zinc-900"
                 >
                   <ShoppingBag className="h-5 w-5" />
                   <span className="sr-only">Pedidos</span>
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right">
+              <TooltipContent side="right" className="bg-zinc-900 text-white border-zinc-800">
                 <p>Pedidos</p>
               </TooltipContent>
             </Tooltip>
@@ -104,13 +105,13 @@ export function Sidebar() {
               <TooltipTrigger asChild>
                 <Link
                   href="#"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:text-white hover:bg-zinc-900"
                 >
                   <Package className="h-5 w-5" />
                   <span className="sr-only">Produtos</span>
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right">
+              <TooltipContent side="right" className="bg-zinc-900 text-white border-zinc-800">
                 <p>Produtos</p>
               </TooltipContent>
             </Tooltip>
@@ -119,13 +120,13 @@ export function Sidebar() {
               <TooltipTrigger asChild>
                 <Link
                   href="#"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:text-white hover:bg-zinc-900"
                 >
                   <User className="h-5 w-5" />
                   <span className="sr-only">Clientes</span>
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right">
+              <TooltipContent side="right" className="bg-zinc-900 text-white border-zinc-800">
                 <p>Clientes</p>
               </TooltipContent>
             </Tooltip>
@@ -134,13 +135,13 @@ export function Sidebar() {
               <TooltipTrigger asChild>
                 <Link
                   href="#"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:text-white hover:bg-zinc-900"
                 >
                   <Settings2 className="h-5 w-5" />
                   <span className="sr-only">Configurações</span>
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right">
+              <TooltipContent side="right" className="bg-zinc-900 text-white border-zinc-800">
                 <p>Configurações</p>
               </TooltipContent>
             </Tooltip>
@@ -154,14 +155,14 @@ export function Sidebar() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Avatar className="w-8 h-8 cursor-default border border-muted-foreground/20">
+                  <Avatar className="w-8 h-8 cursor-default border border-zinc-800">
                     {user.photoURL && <AvatarImage src={user.photoURL} />}
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs flex items-center justify-center w-full h-full">
+                    <AvatarFallback className="bg-zinc-900 text-white font-bold text-xs flex items-center justify-center w-full h-full">
                       {getFallbackLetter()}
                     </AvatarFallback>
                   </Avatar>
                 </TooltipTrigger>
-                <TooltipContent side="right">
+                <TooltipContent side="right" className="bg-zinc-900 text-white border-zinc-800">
                   <p className="text-xs">{user.email}</p>
                 </TooltipContent>
               </Tooltip>
@@ -174,13 +175,13 @@ export function Sidebar() {
               <TooltipTrigger asChild>
                 <button
                   onClick={handleSignOut}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-red-500 hover:bg-red-500/10"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:text-red-400 hover:bg-red-500/10"
                 >
                   <LogOut className="h-5 w-5 text-red-500" />
                   <span className="sr-only">Sair</span>
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right">
+              <TooltipContent side="right" className="bg-zinc-900 text-white border-zinc-800">
                 <p>Sair</p>
               </TooltipContent>
             </Tooltip>
@@ -189,18 +190,17 @@ export function Sidebar() {
       </aside>
 
       {/* HEADER E MENU PARA CELULAR/TABLET (Telas menores que 'sm') */}
-      <div className="sm:hidden flex flex-col sm:gap-4 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center px-4 border-b bg-background gap-4 sm:static sm:h-auto sm:border-b-0 sm:bg-transparent sm:px-6">
+      <div className="sm:hidden flex flex-col bg-zinc-950">
+        <header className="sticky top-0 z-30 flex h-14 items-center px-4 border-b border-zinc-900 bg-zinc-950 gap-4">
           <Sheet>
             <SheetTrigger asChild>
-              <Button size="icon" variant="outline" className="sm:hidden">
+              <Button size="icon" variant="outline" className="sm:hidden border-zinc-800 bg-zinc-900 text-white hover:bg-zinc-800">
                 <PanelBottom className="h-5 w-5" />
                 <span className="sr-only">Abrir / fechar menu</span>
               </Button>
             </SheetTrigger>
             
-            {/* Adicionado h-full e flex-col para podermos fixar o rodapé do mobile no final */}
-            <SheetContent side="left" className="sm:max-w-xs flex flex-col h-full">
+            <SheetContent side="left" className="sm:max-w-xs flex flex-col h-full bg-zinc-950 border-r border-zinc-900 text-white">
               {/* Seção Superior do menu Mobile */}
               <nav className="grid gap-6 text-lg font-medium">
                 <Link
@@ -214,7 +214,7 @@ export function Sidebar() {
 
                 <Link
                   href="#"
-                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                  className="flex items-center gap-4 px-2.5 text-zinc-400 hover:text-white"
                   prefetch={false}
                 >
                   <Home className="h-5 w-5 transition-all" />
@@ -223,7 +223,7 @@ export function Sidebar() {
 
                 <Link
                   href="#"
-                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                  className="flex items-center gap-4 px-2.5 text-zinc-400 hover:text-white"
                   prefetch={false}
                 >
                   <ShoppingBag className="h-5 w-5 transition-all" />
@@ -231,7 +231,7 @@ export function Sidebar() {
                 </Link>
                 <Link
                   href="#"
-                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                  className="flex items-center gap-4 px-2.5 text-zinc-400 hover:text-white"
                   prefetch={false}
                 >
                   <Package className="h-5 w-5 transition-all" />
@@ -239,7 +239,7 @@ export function Sidebar() {
                 </Link>
                 <Link
                   href="#"
-                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                  className="flex items-center gap-4 px-2.5 text-zinc-400 hover:text-white"
                   prefetch={false}
                 >
                   <User className="h-5 w-5 transition-all" />
@@ -247,7 +247,7 @@ export function Sidebar() {
                 </Link>
                 <Link
                   href="#"
-                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                  className="flex items-center gap-4 px-2.5 text-zinc-400 hover:text-white"
                   prefetch={false}
                 >
                   <Settings2 className="h-5 w-5 transition-all" />
@@ -255,33 +255,30 @@ export function Sidebar() {
                 </Link>
               </nav>
 
-              {/* SEÇÃO INFERIOR MOBILE (Agora alinhada ao rodapé do painel) */}
+              {/* SEÇÃO INFERIOR MOBILE */}
               {user && (
-                <div className="mt-auto pt-6 border-t flex flex-col gap-4">
-                  {/* Informações do usuário logado no Mobile */}
+                <div className="mt-auto pt-6 border-t border-zinc-900 flex flex-col gap-4">
                   <div className="flex items-center gap-3 px-2.5">
-                    <Avatar className="w-9 h-9 border border-muted-foreground/20">
+                    <Avatar className="w-9 h-9 border border-zinc-800">
                       {user.photoURL && <AvatarImage src={user.photoURL} />}
-                      <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm flex items-center justify-center w-full h-full">
+                      <AvatarFallback className="bg-zinc-900 text-white font-bold text-sm flex items-center justify-center w-full h-full">
                         {getFallbackLetter()}
                       </AvatarFallback>
                     </Avatar>
                     
-                    {/* Exibe o e-mail do usuário de forma organizada */}
                     <div className="flex flex-col overflow-hidden">
-                      <span className="text-sm font-semibold text-foreground truncate">
+                      <span className="text-sm font-semibold text-white truncate">
                         Usuário Ativo
                       </span>
-                      <span className="text-xs text-muted-foreground truncate">
+                      <span className="text-xs text-zinc-400 truncate">
                         {user.email}
                       </span>
                     </div>
                   </div>
 
-                  {/* Botão de Sair no Mobile */}
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center gap-4 px-2.5 py-2 text-red-500 hover:text-red-600 hover:bg-red-500/10 rounded-md text-left w-full transition-colors font-medium"
+                    className="flex items-center gap-4 px-2.5 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-md text-left w-full transition-colors font-medium"
                   >
                     <LogOut className="h-5 w-5" />
                     Sair da Conta
@@ -290,7 +287,7 @@ export function Sidebar() {
               )}
             </SheetContent>
           </Sheet>
-          <h2>Menu</h2>
+          <h2 className="text-white font-bold">Menu</h2>
         </header>
       </div>
     </div>

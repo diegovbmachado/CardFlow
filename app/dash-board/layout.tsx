@@ -2,10 +2,8 @@
 
 import { Geist, Geist_Mono } from "next/font/google";
 import { Sidebar } from "@/components/dashboard/sidebar";
-// Importamos o componente de proteção que você criou
 import { ProtectedRoute } from "@/components/auth/protected-route";
 
-// Configuração das fontes originais do seu projeto
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -22,15 +20,13 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // 1. Envolvemos todo o layout na rota protegida do Firebase
     <ProtectedRoute>
-      {/* 2. Mantemos a div principal com as suas fontes bonitas e antialiased */}
-      <div className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+      <div className={`${geistSans.variable} ${geistMono.variable} h-full antialiased bg-zinc-950 text-white`}>
         
-        {/* 3. Estrutura visual da sua Dashboard */}
-        <div className="flex min-h-screen w-full flex-col bg-muted/40">
+        {/* Trocamos o bg-muted/40 para bg-zinc-950 para dar o fundo escuro e luxuoso */}
+        <div className="flex min-h-screen w-full flex-col bg-zinc-950">
           <Sidebar />
-          <div className="flex flex-col sm:gap-4 sm:pl-14">
+          <div className="flex flex-col sm:gap-4">
             {children}
           </div>
         </div>
