@@ -128,3 +128,7 @@
     @apply font-sans;
   }
 }
+/* Esconde o botão do Next.js Dev Tools no ambiente de testes */
+#next-logo, [data-nextjs-dev-tools-button="true"], nextjs-portal {
+  display: none !important;
+}

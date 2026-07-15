@@ -1,6 +1,15 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet";
 import { Button } from "../../ui/button";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+// Importações do Firebase
+import { signOut, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+
 import {
   Home,
   LogOut,
@@ -16,9 +25,40 @@ import {
   Tooltip,
   TooltipContent,
 } from "../../ui/tooltip";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 export function Sidebar() {
+  const router = useRouter();
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+
+  // Monitora se o usuário está logado e pega as informações dele
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Função para fazer logout e voltar para a home de login
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.push("/"); // Redireciona para a página inicial de login
+    } catch (error) {
+      console.error("Erro ao sair:", error);
+    }
+  };
+
+  // Pega a inicial do e-mail ou nome para mostrar no Avatar caso não tenha foto
+  const getFallbackLetter = () => {
+    if (user?.displayName) return user.displayName.charAt(0).toUpperCase();
+    if (user?.email) return user.email.charAt(0).toUpperCase();
+    return "U";
+  };
+
   return (
     <div className="flex w-full flex-col bg-muted/40">
+      {/* SIDEBAR PARA COMPUTADOR (Telas maiores que 'sm') */}
       <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 border-r bg-background sm:flex flex-col">
         <nav className="flex flex-col items-center gap-4 px-2 py-5">
           <TooltipProvider>
@@ -74,6 +114,7 @@ export function Sidebar() {
                 <p>Produtos</p>
               </TooltipContent>
             </Tooltip>
+            
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -88,6 +129,7 @@ export function Sidebar() {
                 <p>Clientes</p>
               </TooltipContent>
             </Tooltip>
+            
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -104,17 +146,39 @@ export function Sidebar() {
             </Tooltip>
           </TooltipProvider>
         </nav>
-        <nav className="mt-auto flex flex-colitems-center gap-4 px-2 py-5">
+
+        {/* Seção inferior Desktop */}
+        <nav className="mt-auto flex flex-col items-center gap-4 px-2 pb-16">
+          {/* Avatar discreto do usuário ativo */}
+          {user && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Avatar className="w-8 h-8 cursor-default border border-muted-foreground/20">
+                    {user.photoURL && <AvatarImage src={user.photoURL} />}
+                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs flex items-center justify-center w-full h-full">
+                      {getFallbackLetter()}
+                    </AvatarFallback>
+                  </Avatar>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p className="text-xs">{user.email}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
+          {/* Botão de Sair com gatilho de Logout */}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link
-                  href="#"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+                <button
+                  onClick={handleSignOut}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-red-500 hover:bg-red-500/10"
                 >
                   <LogOut className="h-5 w-5 text-red-500" />
                   <span className="sr-only">Sair</span>
-                </Link>
+                </button>
               </TooltipTrigger>
               <TooltipContent side="right">
                 <p>Sair</p>
@@ -124,8 +188,9 @@ export function Sidebar() {
         </nav>
       </aside>
 
+      {/* HEADER E MENU PARA CELULAR/TABLET (Telas menores que 'sm') */}
       <div className="sm:hidden flex flex-col sm:gap-4 sm:pl-14">
-        <header className="sticky tiop-0 z-30 flex h-14 items-center px-4 border-b bg-background gap-4 sm:static sm:h-auto sm:border-b-0 sm:bg-transparent sm:px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center px-4 border-b bg-background gap-4 sm:static sm:h-auto sm:border-b-0 sm:bg-transparent sm:px-6">
           <Sheet>
             <SheetTrigger asChild>
               <Button size="icon" variant="outline" className="sm:hidden">
@@ -133,7 +198,10 @@ export function Sidebar() {
                 <span className="sr-only">Abrir / fechar menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="sm:max-w-x">
+            
+            {/* Adicionado h-full e flex-col para podermos fixar o rodapé do mobile no final */}
+            <SheetContent side="left" className="sm:max-w-xs flex flex-col h-full">
+              {/* Seção Superior do menu Mobile */}
               <nav className="grid gap-6 text-lg font-medium">
                 <Link
                   href="#"
@@ -146,7 +214,7 @@ export function Sidebar() {
 
                 <Link
                   href="#"
-                  className="felx items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
                   prefetch={false}
                 >
                   <Home className="h-5 w-5 transition-all" />
@@ -155,7 +223,7 @@ export function Sidebar() {
 
                 <Link
                   href="#"
-                  className="felx items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
                   prefetch={false}
                 >
                   <ShoppingBag className="h-5 w-5 transition-all" />
@@ -163,7 +231,7 @@ export function Sidebar() {
                 </Link>
                 <Link
                   href="#"
-                  className="felx items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
                   prefetch={false}
                 >
                   <Package className="h-5 w-5 transition-all" />
@@ -171,7 +239,7 @@ export function Sidebar() {
                 </Link>
                 <Link
                   href="#"
-                  className="felx items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
                   prefetch={false}
                 >
                   <User className="h-5 w-5 transition-all" />
@@ -179,13 +247,47 @@ export function Sidebar() {
                 </Link>
                 <Link
                   href="#"
-                  className="felx items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                  className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
                   prefetch={false}
                 >
                   <Settings2 className="h-5 w-5 transition-all" />
                   Configurações
                 </Link>
               </nav>
+
+              {/* SEÇÃO INFERIOR MOBILE (Agora alinhada ao rodapé do painel) */}
+              {user && (
+                <div className="mt-auto pt-6 border-t flex flex-col gap-4">
+                  {/* Informações do usuário logado no Mobile */}
+                  <div className="flex items-center gap-3 px-2.5">
+                    <Avatar className="w-9 h-9 border border-muted-foreground/20">
+                      {user.photoURL && <AvatarImage src={user.photoURL} />}
+                      <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm flex items-center justify-center w-full h-full">
+                        {getFallbackLetter()}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    {/* Exibe o e-mail do usuário de forma organizada */}
+                    <div className="flex flex-col overflow-hidden">
+                      <span className="text-sm font-semibold text-foreground truncate">
+                        Usuário Ativo
+                      </span>
+                      <span className="text-xs text-muted-foreground truncate">
+                        {user.email}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Botão de Sair no Mobile */}
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center gap-4 px-2.5 py-2 text-red-500 hover:text-red-600 hover:bg-red-500/10 rounded-md text-left w-full transition-colors font-medium"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    Sair da Conta
+                  </button>
+                </div>
+              )}
             </SheetContent>
           </Sheet>
           <h2>Menu</h2>
