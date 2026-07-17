@@ -1,86 +1,104 @@
 "use client";
 
-import * as React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartConfig,
-  ChartTooltipContent,
-  ChartTooltip,
-} from "../../ui/chart";
+import React, { useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChartContainer, ChartConfig, ChartTooltipContent, ChartTooltip } from "../../ui/chart";
 import { Bar, CartesianGrid, XAxis, BarChart } from "recharts";
+import { ArrowUpCircle, ArrowDownCircle, Loader2 } from "lucide-react";
 
-export default function ChartOverview() {
-  const [activeChart, setActiveChart] = React.useState<"desktop" | "mobile">("desktop");
+interface ChartOverviewProps {
+  selectedYear: string;
+  setSelectedYear: (year: string) => void;
+  firebaseData: any[];
+  loading: boolean;
+}
 
-  const chartData = [
-    { month: "Janeiro", desktop: 186, mobile: 80 },
-    { month: "Fevereiro", desktop: 305, mobile: 200 },
-    { month: "Março", desktop: 237, mobile: 120 },
-    { month: "Abril", desktop: 73, mobile: 190 },
-    { month: "Maio", desktop: 209, mobile: 130 },
-    { month: "Junho", desktop: 214, mobile: 140 },
-  ];
+export default function ChartOverview({ selectedYear, setSelectedYear, firebaseData, loading }: ChartOverviewProps) {
+  const nomesMeses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
-  // Configuração de cores em Neon combinando com o Login: Roxo e Fúcsia!
+  // Processa os dados recebidos do pai agrupando por mês
+  const chartData = useMemo(() => {
+    const mesesAgrupados = Array.from({ length: 12 }, (_, i) => ({
+      month: nomesMeses[i],
+      income: 0,
+      expense: 0,
+    }));
+
+    firebaseData.forEach((trans) => {
+      if (!trans.date) return;
+      const [ano, mesStr] = trans.date.split("-");
+      
+      if (ano === selectedYear) {
+        const indexMes = parseInt(mesStr, 10) - 1;
+        if (indexMes >= 0 && indexMes < 12) {
+          const valor = trans.money?.value || 0;
+          if (trans.type === "income") {
+            mesesAgrupados[indexMes].income += valor;
+          } else if (trans.type === "expense") {
+            mesesAgrupados[indexMes].expense += valor;
+          }
+        }
+      }
+    });
+
+    return mesesAgrupados;
+  }, [firebaseData, selectedYear]);
+
+  const totals = useMemo(() => {
+    return chartData.reduce(
+      (acc, curr) => {
+        acc.income += curr.income;
+        acc.expense += curr.expense;
+        return acc;
+      },
+      { income: 0, expense: 0 }
+    );
+  }, [chartData]);
+
   const chartConfig = {
-    desktop: {
-      label: "Desktop",
-      color: "#a855f7", // Roxo vibrante
-    },
-    mobile: {
-      label: "Mobile",
-      color: "#ec4899", // Fúcsia vibrante
-    },
+    income: { label: "Receitas (Income)", color: "#a855f7" },
+    expense: { label: "Despesas (Expense)", color: "#ec4899" },
   } satisfies ChartConfig;
 
-  const totals = React.useMemo(() => {
-    return {
-      desktop: chartData.reduce((acc, curr) => acc + curr.desktop, 0),
-      mobile: chartData.reduce((acc, curr) => acc + curr.mobile, 0),
-    };
-  }, []);
-
   return (
-    <Card className="flex-1 bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 text-white shadow-xl overflow-hidden">
-      
-      {/* 💥 INJEÇÃO DE ESTILO INLINE: Isso anula qualquer background branco do cursor do Recharts forçadamente */}
+    <Card className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 text-white shadow-xl overflow-hidden relative">
       <style jsx global>{`
         .recharts-rectangle.recharts-tooltip-cursor {
-          fill: rgba(255, 255, 255, 0.05) !important;
+          fill: rgba(255, 255, 255, 0.04) !important;
           fill-opacity: 1 !important;
         }
       `}</style>
 
-      <CardHeader className="flex flex-col items-stretch space-y-0 border-b border-zinc-800/50 p-0 sm:flex-row">
-        <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
-          <CardTitle className="text-base sm:text-lg font-bold text-white">
-            Overview vendas
+      <CardHeader className="flex flex-col items-stretch space-y-4 border-b border-zinc-800/50 p-6 sm:flex-row sm:space-y-0">
+        <div className="flex flex-1 flex-col justify-center gap-1.5">
+          <CardTitle className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+            Fluxo de Caixa
+            {loading && <Loader2 className="w-4 h-4 animate-spin text-purple-500" />}
           </CardTitle>
-          <CardDescription className="text-xs text-zinc-400">
-            Total de vendas nos últimos 6 meses
-          </CardDescription>
+          
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="w-[90px] bg-zinc-950/50 border-zinc-800 text-zinc-300 rounded-lg h-8 text-xs">
+              <SelectValue placeholder="Ano" />
+            </SelectTrigger>
+            <SelectContent className="bg-zinc-950 border-zinc-800 text-white text-xs">
+              <SelectItem value="2024">2024</SelectItem>
+              <SelectItem value="2025">2025</SelectItem>
+              <SelectItem value="2026">2026</SelectItem>
+              <SelectItem value="2027">2027</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         
-        <div className="flex border-t border-zinc-800/50 sm:border-t-0">
-          {(["desktop", "mobile"] as const).map((key) => {
-            const chart = key as keyof typeof chartConfig;
-            return (
-              <button
-                key={key}
-                data-active={activeChart === key}
-                className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-r border-zinc-800/50 last:border-r-0 px-6 py-4 text-left data-[active=true]:bg-zinc-800/50 sm:border-l sm:border-r-0 sm:border-t-0 sm:px-8 sm:py-6 transition-all"
-                onClick={() => setActiveChart(key)}
-              >
-                <span className="text-xs text-zinc-400">
-                  {chartConfig[chart].label}
-                </span>
-                <span className="text-lg font-extrabold leading-none sm:text-2xl text-white">
-                  {totals[key].toLocaleString()}
-                </span>
-              </button>
-            );
-          })}
+        <div className="flex border-t border-zinc-800/50 sm:border-t-0 bg-zinc-950/20 rounded-xl border border-zinc-800/30 overflow-hidden">
+          <div className="flex flex-col justify-center gap-1 border-r border-zinc-800/50 px-5 py-3">
+            <span className="text-[10px] text-zinc-400 font-medium flex items-center gap-1 uppercase"><ArrowUpCircle className="w-3 h-3 text-purple-400" /> Entradas</span>
+            <span className="text-base font-extrabold text-purple-400">R$ {totals.income.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+          </div>
+          <div className="flex flex-col justify-center gap-1 px-5 py-3">
+            <span className="text-[10px] text-zinc-400 font-medium flex items-center gap-1 uppercase"><ArrowDownCircle className="w-3 h-3 text-pink-400" /> Saídas</span>
+            <span className="text-base font-extrabold text-pink-400">R$ {totals.expense.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+          </div>
         </div>
       </CardHeader>
 
@@ -88,35 +106,10 @@ export default function ChartOverview() {
         <ChartContainer config={chartConfig} className="min-h-62.5 w-full">
           <BarChart data={chartData} margin={{ top: 20, right: 12, left: 12, bottom: 0 }}>
             <CartesianGrid vertical={false} stroke="#27272a" />
-            <XAxis
-              dataKey="month"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
-              stroke="#a1a1aa"
-            />
-            
-            {/* Mantemos o cursor como a variável do CSS injetada acima */}
-            <ChartTooltip 
-              cursor={{ fill: "rgba(255, 255, 255, 0.05)", radius: 4 }} 
-              content={<ChartTooltipContent className="bg-zinc-950 border-zinc-800 text-white" />} 
-            />
-            
-            <Bar
-              dataKey="desktop"
-              fill="var(--color-desktop)"
-              radius={[4, 4, 0, 0]}
-              isAnimationActive={true}
-              animationDuration={1000}
-            />
-            <Bar
-              dataKey="mobile"
-              fill="var(--color-mobile)"
-              radius={[4, 4, 0, 0]}
-              isAnimationActive={true}
-              animationDuration={1000}
-            />
+            <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} stroke="#a1a1aa" />
+            <ChartTooltip cursor={{ fill: "rgba(255, 255, 255, 0.04)", radius: 4 }} content={<ChartTooltipContent className="bg-zinc-950 border-zinc-800 text-white" formatter={(value) => `R$ ${Number(value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} />} />
+            <Bar dataKey="income" fill="var(--color-income)" radius={[4, 4, 0, 0]} isAnimationActive={true} />
+            <Bar dataKey="expense" fill="var(--color-expense)" radius={[4, 4, 0, 0]} isAnimationActive={true} />
           </BarChart>
         </ChartContainer>
       </CardContent>

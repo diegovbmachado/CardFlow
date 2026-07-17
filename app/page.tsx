@@ -21,7 +21,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -29,9 +29,10 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push("/dash-board");
-    } catch (err: any) {
-      console.error(err);
-      if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found") {
+    } catch (err) {
+      const errorAuth = err as { code: string };
+      console.error(errorAuth);
+      if (errorAuth.code === "auth/invalid-credential" || errorAuth.code === "auth/wrong-password" || errorAuth.code === "auth/user-not-found") {
         setError("E-mail ou senha incorretos.");
       } else {
         setError("Ocorreu um erro ao fazer login.");
@@ -48,9 +49,10 @@ export default function LoginPage() {
     try {
       await signInWithPopup(auth, googleProvider);
       router.push("/dash-board");
-    } catch (err: any) {
-      console.error("Erro Google:", err);
-      if (err.code !== "auth/popup-closed-by-user") {
+    } catch (err) {
+      const errorAuth = err as { code: string };
+      console.error("Erro Google:", errorAuth);
+      if (errorAuth.code !== "auth/popup-closed-by-user") {
         setError("Não foi possível autenticar com o Google.");
       }
     } finally {
