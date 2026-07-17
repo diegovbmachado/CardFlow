@@ -129,7 +129,10 @@
     @apply font-sans;
   }
 }
-
+/* Força o cursor de seleção do gráfico a ser escuro e elegante em toda a aplicação */
+.recharts-tooltip-cursor {
+  fill: rgba(255, 255, 255, 0.04) !important;
+}
 /* Esconde o botão do Next.js Dev Tools no ambiente de testes */
 #next-logo, [data-nextjs-dev-tools-button="true"], nextjs-portal {
   display: none !important;

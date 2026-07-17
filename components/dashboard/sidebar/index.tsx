@@ -13,10 +13,10 @@ import { auth } from "@/lib/firebase";
 import {
   Home,
   LogOut,
-  Package,
+  PlusCircle,
   PanelBottom,
   Settings2,
-  ShoppingBag,
+  Wallet,
   User,
 } from "lucide-react";
 import {
@@ -59,22 +59,23 @@ export function Sidebar() {
   return (
     <div className="flex w-full flex-col bg-zinc-950">
       {/* SIDEBAR PARA COMPUTADOR (Telas maiores que 'sm') */}
-      {/* Fundo alterado para bg-zinc-950 e bordas cinza-escuras */}
-      <aside className="fixed inset-y-0 left-0 z-10 hidden w-14 border-r border-zinc-900 bg-zinc-950 sm:flex flex-col">
+      <aside className="fixed inset-y-0 left-0 z-50 hidden w-14 border-r border-zinc-900 bg-zinc-950 sm:flex flex-col">
         <nav className="flex flex-col items-center gap-4 px-2 py-5">
           <TooltipProvider>
+            {/* Logo do App - Ícone de Carteira */}
             <Link
-              href="#"
-              className="flex h-9 w-9 shrink-0 items-center justify-center bg-primary text-primary-foreground rounded-full"
+              href="/dash-board"
+              className="flex h-9 w-9 shrink-0 items-center justify-center bg-purple-600 text-white rounded-full shadow-lg shadow-purple-500/20"
             >
-              <Package className="h-4 w-4" />
-              <span className="sr-only">Dashboard Avatar</span>
+              <Wallet className="h-4 w-4" />
+              <span className="sr-only">CardFlow</span>
             </Link>
 
+            {/* Link 1: Início (Dashboard) */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
-                  href="#"
+                  href="/dash-board"
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:text-white hover:bg-zinc-900"
                 >
                   <Home className="h-5 w-5" />
@@ -86,51 +87,23 @@ export function Sidebar() {
               </TooltipContent>
             </Tooltip>
 
+            {/* Link 2: Registrar Lançamento (Antigo Pedidos) */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
-                  href="#"
+                  href="/dash-board/transactions"
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:text-white hover:bg-zinc-900"
                 >
-                  <ShoppingBag className="h-5 w-5" />
-                  <span className="sr-only">Pedidos</span>
+                  <PlusCircle className="h-5 w-5" />
+                  <span className="sr-only">Registrar</span>
                 </Link>
               </TooltipTrigger>
               <TooltipContent side="right" className="bg-zinc-900 text-white border-zinc-800">
-                <p>Pedidos</p>
+                <p>Registrar Lançamento</p>
               </TooltipContent>
             </Tooltip>
 
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link
-                  href="#"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:text-white hover:bg-zinc-900"
-                >
-                  <Package className="h-5 w-5" />
-                  <span className="sr-only">Produtos</span>
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="bg-zinc-900 text-white border-zinc-800">
-                <p>Produtos</p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link
-                  href="#"
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:text-white hover:bg-zinc-900"
-                >
-                  <User className="h-5 w-5" />
-                  <span className="sr-only">Clientes</span>
-                </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="bg-zinc-900 text-white border-zinc-800">
-                <p>Clientes</p>
-              </TooltipContent>
-            </Tooltip>
-            
+            {/* Link 3: Configurações */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -150,7 +123,6 @@ export function Sidebar() {
 
         {/* Seção inferior Desktop */}
         <nav className="mt-auto flex flex-col items-center gap-4 px-2 pb-16">
-          {/* Avatar discreto do usuário ativo */}
           {user && (
             <TooltipProvider>
               <Tooltip>
@@ -169,7 +141,6 @@ export function Sidebar() {
             </TooltipProvider>
           )}
 
-          {/* Botão de Sair com gatilho de Logout */}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -201,54 +172,33 @@ export function Sidebar() {
             </SheetTrigger>
             
             <SheetContent side="left" className="sm:max-w-xs flex flex-col h-full bg-zinc-950 border-r border-zinc-900 text-white">
-              {/* Seção Superior do menu Mobile */}
               <nav className="grid gap-6 text-lg font-medium">
                 <Link
-                  href="#"
-                  className="flex h-10 w-10 bg-primary rounded-full text-lg items-center justify-center text-primary-foreground md:text-base gap-2"
-                  prefetch={false}
+                  href="/dash-board"
+                  className="flex h-10 w-10 bg-purple-600 rounded-full text-lg items-center justify-center text-white gap-2 shadow-lg shadow-purple-500/20"
                 >
-                  <Package className="h-5 w-5 transition-all" />
-                  <span>Logo</span>
+                  <Wallet className="h-5 w-5" />
                 </Link>
 
                 <Link
-                  href="#"
+                  href="/dash-board"
                   className="flex items-center gap-4 px-2.5 text-zinc-400 hover:text-white"
-                  prefetch={false}
                 >
                   <Home className="h-5 w-5 transition-all" />
                   Início
                 </Link>
 
                 <Link
-                  href="#"
+                  href="/dash-board/transactions"
                   className="flex items-center gap-4 px-2.5 text-zinc-400 hover:text-white"
-                  prefetch={false}
                 >
-                  <ShoppingBag className="h-5 w-5 transition-all" />
-                  Pedidos
+                  <PlusCircle className="h-5 w-5 transition-all" />
+                  Registrar
                 </Link>
+
                 <Link
                   href="#"
                   className="flex items-center gap-4 px-2.5 text-zinc-400 hover:text-white"
-                  prefetch={false}
-                >
-                  <Package className="h-5 w-5 transition-all" />
-                  Produtos
-                </Link>
-                <Link
-                  href="#"
-                  className="flex items-center gap-4 px-2.5 text-zinc-400 hover:text-white"
-                  prefetch={false}
-                >
-                  <User className="h-5 w-5 transition-all" />
-                  Clientes
-                </Link>
-                <Link
-                  href="#"
-                  className="flex items-center gap-4 px-2.5 text-zinc-400 hover:text-white"
-                  prefetch={false}
                 >
                   <Settings2 className="h-5 w-5 transition-all" />
                   Configurações
@@ -268,7 +218,7 @@ export function Sidebar() {
                     
                     <div className="flex flex-col overflow-hidden">
                       <span className="text-sm font-semibold text-white truncate">
-                        Usuário Ativo
+                        {user.displayName || "Usuário Ativo"}
                       </span>
                       <span className="text-xs text-zinc-400 truncate">
                         {user.email}
@@ -287,7 +237,7 @@ export function Sidebar() {
               )}
             </SheetContent>
           </Sheet>
-          <h2 className="text-white font-bold">Menu</h2>
+          <h2 className="text-white font-bold text-sm">CardFlow</h2>
         </header>
       </div>
     </div>
