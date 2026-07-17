@@ -10,13 +10,20 @@ import { ArrowUpCircle, ArrowDownCircle, Loader2 } from "lucide-react";
 interface ChartOverviewProps {
   selectedYear: string;
   setSelectedYear: (year: string) => void;
-  firebaseData: any[];
+  firebaseData: Array<{
+    type: "expense" | "income";
+    date: any;
+    transactionType?: string;
+    money?: { value: number };
+  }>;
   loading: boolean;
 }
 
-export default function ChartOverview({ selectedYear, setSelectedYear, firebaseData, loading }: ChartOverviewProps) {
-  const nomesMeses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+// Declarado fora do componente para o useMemo não reclamar de dependência
+const nomesMeses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
+export default function ChartOverview({ selectedYear, setSelectedYear, firebaseData, loading }: ChartOverviewProps) {
+  
   // Processa os dados recebidos do pai agrupando por mês
   const chartData = useMemo(() => {
     const mesesAgrupados = Array.from({ length: 12 }, (_, i) => ({
@@ -27,7 +34,20 @@ export default function ChartOverview({ selectedYear, setSelectedYear, firebaseD
 
     firebaseData.forEach((trans) => {
       if (!trans.date) return;
-      const [ano, mesStr] = trans.date.split("-");
+
+      // Tratamento de data ultra seguro para evitar erros com Timestamps
+      let dateStr = "";
+      if (typeof trans.date === "string") {
+        dateStr = trans.date;
+      } else if (trans.date && typeof trans.date === "object" && "seconds" in trans.date) {
+        dateStr = new Date((trans.date as any).seconds * 1000).toISOString();
+      } else if (trans.date instanceof Date) {
+        dateStr = trans.date.toISOString();
+      }
+
+      if (!dateStr || !dateStr.includes("-")) return;
+
+      const [ano, mesStr] = dateStr.split("-");
       
       if (ano === selectedYear) {
         const indexMes = parseInt(mesStr, 10) - 1;
@@ -45,6 +65,7 @@ export default function ChartOverview({ selectedYear, setSelectedYear, firebaseD
     return mesesAgrupados;
   }, [firebaseData, selectedYear]);
 
+  // Calcula os totais das caixas do topo do gráfico
   const totals = useMemo(() => {
     return chartData.reduce(
       (acc, curr) => {
@@ -92,12 +113,20 @@ export default function ChartOverview({ selectedYear, setSelectedYear, firebaseD
         
         <div className="flex border-t border-zinc-800/50 sm:border-t-0 bg-zinc-950/20 rounded-xl border border-zinc-800/30 overflow-hidden">
           <div className="flex flex-col justify-center gap-1 border-r border-zinc-800/50 px-5 py-3">
-            <span className="text-[10px] text-zinc-400 font-medium flex items-center gap-1 uppercase"><ArrowUpCircle className="w-3 h-3 text-purple-400" /> Entradas</span>
-            <span className="text-base font-extrabold text-purple-400">R$ {totals.income.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+            <span className="text-[10px] text-zinc-400 font-medium flex items-center gap-1 uppercase">
+              <ArrowUpCircle className="w-3 h-3 text-purple-400" /> Entradas
+            </span>
+            <span className="text-base font-extrabold text-purple-400">
+              R$ {totals.income.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+            </span>
           </div>
           <div className="flex flex-col justify-center gap-1 px-5 py-3">
-            <span className="text-[10px] text-zinc-400 font-medium flex items-center gap-1 uppercase"><ArrowDownCircle className="w-3 h-3 text-pink-400" /> Saídas</span>
-            <span className="text-base font-extrabold text-pink-400">R$ {totals.expense.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+            <span className="text-[10px] text-zinc-400 font-medium flex items-center gap-1 uppercase">
+              <ArrowDownCircle className="w-3 h-3 text-pink-400" /> Saídas
+            </span>
+            <span className="text-base font-extrabold text-pink-400">
+              R$ {totals.expense.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+            </span>
           </div>
         </div>
       </CardHeader>
@@ -107,7 +136,15 @@ export default function ChartOverview({ selectedYear, setSelectedYear, firebaseD
           <BarChart data={chartData} margin={{ top: 20, right: 12, left: 12, bottom: 0 }}>
             <CartesianGrid vertical={false} stroke="#27272a" />
             <XAxis dataKey="month" tickLine={false} tickMargin={10} axisLine={false} stroke="#a1a1aa" />
-            <ChartTooltip cursor={{ fill: "rgba(255, 255, 255, 0.04)", radius: 4 }} content={<ChartTooltipContent className="bg-zinc-950 border-zinc-800 text-white" formatter={(value) => `R$ ${Number(value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} />} />
+            <ChartTooltip 
+              cursor={{ fill: "rgba(255, 255, 255, 0.04)", radius: 4 }} 
+              content={
+                <ChartTooltipContent 
+                  className="bg-zinc-950 border-zinc-800 text-white" 
+                  formatter={(value) => `R$ ${Number(value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`} 
+                />
+              } 
+            />
             <Bar dataKey="income" fill="var(--color-income)" radius={[4, 4, 0, 0]} isAnimationActive={true} />
             <Bar dataKey="expense" fill="var(--color-expense)" radius={[4, 4, 0, 0]} isAnimationActive={true} />
           </BarChart>

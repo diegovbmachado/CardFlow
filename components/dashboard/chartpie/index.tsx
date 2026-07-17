@@ -35,13 +35,15 @@ const chartConfig = {
   Transporte: { label: "Transporte", color: "#eab308" }, // Amarelo
   Outros: { label: "Outros", color: "#64748b" }, // Cinza
 } satisfies ChartConfig;
+
 interface ChartPieProps {
   selectedYear: string;
   selectedMonth: string;
   setSelectedMonth: (month: string) => void;
   firebaseData: Array<{
     type: "expense" | "income";
-    date: string;
+    // 🟢 Especificando exatamente os formatos possíveis que tratamos no código:
+    date: string | Date | { seconds: number; nanoseconds: number };
     transactionType?: string;
     money?: { value: number };
   }>;
@@ -79,7 +81,21 @@ export function ChartPieInteractive({
     firebaseData.forEach((trans) => {
       if (trans.type !== viewType || !trans.date) return;
 
-      const [ano, mes] = trans.date.split("-");
+      // 🟢 TRATAMENTO DE DATA ULTRA SEGURO REFEITO SEM PALAVRAS BANIDAS PELO LINTER:
+      let dateStr = "";
+      if (typeof trans.date === "string") {
+        dateStr = trans.date;
+      } else if (trans.date && typeof trans.date === "object" && "seconds" in trans.date) {
+        // Casting seguro para uma estrutura de objeto mapeada, liberando o método .toISOString()
+        const timestamp = trans.date as { seconds: number };
+        dateStr = new Date(timestamp.seconds * 1000).toISOString();
+      } else if (trans.date instanceof Date) {
+        dateStr = trans.date.toISOString();
+      }
+
+      if (!dateStr || !dateStr.includes("-")) return;
+
+      const [ano, mes] = dateStr.split("-");
       if (ano === selectedYear && mes === selectedMonth) {
         const cat = trans.transactionType || "Outros";
         const valor = trans.money?.value || 0;
@@ -241,6 +257,7 @@ export function ChartPieInteractive({
                           textAnchor="middle"
                           dominantBaseline="middle"
                         >
+                          {/* 🟢 Corrigido: Usando <tspan> puro para alinhar corretamente no centro do SVG */}
                           <tspan
                             x={viewBox.cx}
                             y={viewBox.cy}
@@ -253,7 +270,7 @@ export function ChartPieInteractive({
                           </tspan>
                           <tspan
                             x={viewBox.cx}
-                            y={(viewBox.cy || 0) + 20}
+                            y={(viewBox.cy || 0) + 24}
                             className="fill-zinc-400 text-[10px] font-medium uppercase tracking-wider"
                           >
                             {viewType === "expense"

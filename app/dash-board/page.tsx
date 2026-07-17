@@ -1,17 +1,29 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { DashboardCards } from "../../components/dashboard/cards";
 import ChartOverview from "../../components/dashboard/chartoverview";
-import { ChartPieInteractive } from "../../components/dashboard/chartpie"; // Certifique-se de ajustar o caminho da pasta
+import { ChartPieInteractive } from "../../components/dashboard/chartpie";
 import { db, auth } from "@/lib/firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+
+// Contrato de dados unificado com os componentes gráficos
+interface TransactionData {
+  type: "expense" | "income";
+  date: string | Date | { seconds: number; nanoseconds: number };
+  transactionType?: string;
+  money?: { value: number };
+  id?: string;
+}
 
 export default function DashboardPage() {
   const [selectedYear, setSelectedYear] = useState("2026");
   const [selectedMonth, setSelectedMonth] = useState("07"); // Julho como padrão inicial
   const [userId, setUserId] = useState<string | null>(null);
-  const [transactions, setTransactions] = useState<Record<string, unknown>[]>([]);
+  
+  // Tipagem estrita aplicada ao estado global de transações
+  const [transactions, setTransactions] = useState<TransactionData[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Escuta o usuário logado
@@ -22,13 +34,12 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, []);
 
-// Busca Única no Firebase por Usuário (Linter estrito fix)
+  // Busca Única no Firebase por Usuário (Linter estrito fix)
   useEffect(() => {
     if (!userId) return;
 
-    // Se o usuário ou filtro mudar e você fizer questão de reativar o loading visual, 
-    // usamos o setTimeout para tirá-lo do fluxo síncrono do efeito:
-    setTimeout(() => {
+    // setTimeout evita o erro de "cascading renders" no linter do Next.js
+    const timer = setTimeout(() => {
       setLoading(true);
     }, 0);
 
@@ -36,9 +47,10 @@ export default function DashboardPage() {
     const q = query(transRef, where("user.uid", "==", userId));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs: Record<string, unknown>[] = [];
+      // Tipagem estrita aplicada também ao array temporário do snapshot
+      const docs: TransactionData[] = [];
       snapshot.forEach((doc) => {
-        docs.push({ id: doc.id, ...doc.data() });
+        docs.push({ id: doc.id, ...doc.data() } as TransactionData);
       });
       setTransactions(docs);
       setLoading(false);
@@ -47,15 +59,21 @@ export default function DashboardPage() {
       setLoading(false);
     });
 
-    return () => unsubscribe();
-  }, [userId, selectedYear]);// Adicionado selectedYear para resetar o loading se o ano mudar
+    return () => {
+      clearTimeout(timer);
+      unsubscribe();
+    };
+  }, [userId, selectedYear]);
 
   return (
     <main className="sm:ml-14 p-4 md:p-6 bg-transparent min-h-screen space-y-6">
-      {/* Aqui futuramente ficarão os seus 4 cards customizáveis do topo */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Espaço reservado para os cards */}
-      </div>
+      
+      {/* 4 Cards Principais e Dinâmicos do Topo */}
+      <DashboardCards 
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
+        firebaseData={transactions}
+      />
 
       {/* Grid com o layout dos dois gráficos em perfeita sincronia */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
@@ -73,7 +91,6 @@ export default function DashboardPage() {
             selectedMonth={selectedMonth}
             setSelectedMonth={setSelectedMonth}
             firebaseData={transactions}
-            loading={loading}
           />
         </div>
       </div>
