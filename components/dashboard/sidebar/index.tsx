@@ -107,7 +107,7 @@ export function Sidebar() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
-                  href="#"
+                  href="/dash-board/settings"
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:text-white hover:bg-zinc-900"
                 >
                   <Settings2 className="h-5 w-5" />
@@ -197,7 +197,7 @@ export function Sidebar() {
                 </Link>
 
                 <Link
-                  href="#"
+                  href="/dash-board/settings"
                   className="flex items-center gap-4 px-2.5 text-zinc-400 hover:text-white"
                 >
                   <Settings2 className="h-5 w-5 transition-all" />
