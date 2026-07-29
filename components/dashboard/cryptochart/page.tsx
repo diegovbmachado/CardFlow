@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { TrendingUp, TrendingDown, RefreshCw, Bell } from "lucide-react";
+import { TrendingUp, TrendingDown, RefreshCw, Bell, AlertTriangle } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { db, auth } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -9,15 +9,24 @@ import { onAuthStateChanged } from "firebase/auth";
 
 export function CryptoChart() {
   const [selectedCoin, setSelectedCoin] = useState("bitcoin");
-  const [targetPrice, setTargetPrice] = useState<number | null>(null);
-  const [days, setDays] = useState("1"); // "1" para 24h, "7" para 7 dias
+  const [availableCoins, setAvailableCoins] = useState<string[]>([
+    "bitcoin",
+    "ethereum",
+    "tether",
+    "axie-infinity",
+  ]);
+  const [upperAlert, setUpperAlert] = useState<number | null>(null);
+  const [lowerAlert, setLowerAlert] = useState<number | null>(null);
+  const [days, setDays] = useState("1");
   const [chartData, setChartData] = useState<any[]>([]);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
   const [priceChange, setPriceChange] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [alertTriggered, setAlertTriggered] = useState(false);
+  
+  const [upperTriggered, setUpperTriggered] = useState(false);
+  const [lowerTriggered, setLowerTriggered] = useState(false);
 
-  // 1. Busca a moeda padrão e o preço alvo salvos no Firebase pelo usuário
+  // 1. Busca as configurações salvas, incluindo a lista de moedas personalizadas e alvos
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -26,11 +35,19 @@ export function CryptoChart() {
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
+            if (data.customCoins && Array.isArray(data.customCoins) && data.customCoins.length > 0) {
+              setAvailableCoins(data.customCoins);
+            }
             if (data.cryptoAlertCoin) {
               setSelectedCoin(data.cryptoAlertCoin);
+            } else if (data.customCoins && data.customCoins.length > 0) {
+              setSelectedCoin(data.customCoins[0]);
             }
-            if (data.cryptoTargetPrice) {
-              setTargetPrice(parseFloat(data.cryptoTargetPrice));
+            if (data.cryptoUpperAlert) {
+              setUpperAlert(parseFloat(data.cryptoUpperAlert));
+            }
+            if (data.cryptoLowerAlert) {
+              setLowerAlert(parseFloat(data.cryptoLowerAlert));
             }
           }
         } catch (error) {
@@ -50,9 +67,10 @@ export function CryptoChart() {
     }
   }, []);
 
-  // 3. Busca dados de preço da API do CoinGecko
+  // 3. Busca dados de preço da API do CoinGecko e valida os limites
   useEffect(() => {
     async function fetchCryptoData() {
+      if (!selectedCoin) return;
       setLoading(true);
       try {
         const res = await fetch(
@@ -83,16 +101,23 @@ export function CryptoChart() {
           const change = ((latestPrice - firstPrice) / firstPrice) * 100;
           setPriceChange(change);
 
-          // 4. Lógica de Disparo de Alerta de Preço
-          if (targetPrice && latestPrice >= targetPrice && !alertTriggered) {
-            setAlertTriggered(true);
-            if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-              new Notification("🚨 Alerta de Criptomoeda!", {
-                body: `A moeda ${selectedCoin.toUpperCase()} atingiu R$ ${latestPrice.toFixed(2)} (Meta: R$ ${targetPrice.toFixed(2)})`,
+          // 4. Lógica de Disparo de Alertas (Teto e Piso)
+          if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+            
+            if (upperAlert && latestPrice >= upperAlert && !upperTriggered) {
+              setUpperTriggered(true);
+              new Notification("🚀 Alerta de Alta - Cripto!", {
+                body: `A moeda ${selectedCoin.toUpperCase()} subiu e passou do teto! Preço atual: R$ ${latestPrice.toFixed(2)} (Meta de Alta: R$ ${upperAlert.toFixed(2)})`,
+              });
+            }
+
+            if (lowerAlert && latestPrice <= lowerAlert && !lowerTriggered) {
+              setLowerTriggered(true);
+              new Notification("⚠️ Alerta de Queda - Cripto!", {
+                body: `A moeda ${selectedCoin.toUpperCase()} caiu e passou do limite! Preço atual: R$ ${latestPrice.toFixed(2)} (Limite de Baixa: R$ ${lowerAlert.toFixed(2)})`,
               });
             }
           }
-        
         }
       } catch (error) {
         console.error("Erro ao buscar dados da criptomoeda:", error);
@@ -102,14 +127,14 @@ export function CryptoChart() {
     }
 
     fetchCryptoData();
-  }, [selectedCoin, days, targetPrice, alertTriggered]);
+  }, [selectedCoin, days, upperAlert, lowerAlert, upperTriggered, lowerTriggered]);
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-white flex flex-col justify-between shadow-xl">
       {/* Cabeçalho do Card */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-lg font-bold capitalize">{selectedCoin.replace("-", " ")}</h3>
             {priceChange !== null && (
               <span
@@ -123,10 +148,17 @@ export function CryptoChart() {
                 {priceChange.toFixed(2)}%
               </span>
             )}
-            {targetPrice && (
-              <span className="flex items-center text-xs text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full">
+            
+            {upperAlert && (
+              <span className="flex items-center text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
                 <Bell className="w-3 h-3 mr-1" />
-                Alvo: R$ {targetPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                Teto: R$ {upperAlert.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+              </span>
+            )}
+            {lowerAlert && (
+              <span className="flex items-center text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
+                <AlertTriangle className="w-3 h-3 mr-1" />
+                Piso: R$ {lowerAlert.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
               </span>
             )}
           </div>
@@ -137,20 +169,22 @@ export function CryptoChart() {
           </p>
         </div>
 
-        {/* Controles de Filtros */}
+        {/* Controles Dinâmicos baseados nas moedas cadastradas */}
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={selectedCoin}
             onChange={(e) => {
               setSelectedCoin(e.target.value);
-              setAlertTriggered(false); // Reseta o alerta ao trocar de moeda
+              setUpperTriggered(false);
+              setLowerTriggered(false);
             }}
-            className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs font-medium text-white focus:outline-none focus:border-purple-500"
+            className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-1.5 text-xs font-medium text-white focus:outline-none focus:border-purple-500 capitalize"
           >
-            <option value="bitcoin">Bitcoin</option>
-            <option value="ethereum">Ethereum</option>
-            <option value="tether">Tether (USDT)</option>
-            <option value="axie-infinity">Axie Infinity</option>
+            {availableCoins.map((c) => (
+              <option key={c} value={c} className="capitalize">
+                {c.replace("-", " ").toUpperCase()}
+              </option>
+            ))}
           </select>
 
           <div className="flex bg-zinc-950 border border-zinc-800 rounded-lg p-0.5 text-xs">
