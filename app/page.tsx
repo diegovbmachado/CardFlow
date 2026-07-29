@@ -1,5 +1,5 @@
 "use client";
-import { CryptoChart } from "@/components/dashboard/cryptochart/crypto-chart";
+import { CryptoChart } from "@/components/dashboard/cryptochart/page";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
