@@ -92,6 +92,7 @@ export function CryptoChart() {
               });
             }
           }
+        
         }
       } catch (error) {
         console.error("Erro ao buscar dados da criptomoeda:", error);
