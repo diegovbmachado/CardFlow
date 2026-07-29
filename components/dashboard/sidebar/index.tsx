@@ -12,12 +12,12 @@ import { auth } from "@/lib/firebase";
 
 import {
   Home,
+  Coins,
   LogOut,
   PlusCircle,
   PanelBottom,
   Settings2,
   Wallet,
-  User,
 } from "lucide-react";
 import {
   TooltipProvider,
@@ -87,7 +87,7 @@ export function Sidebar() {
               </TooltipContent>
             </Tooltip>
 
-            {/* Link 2: Registrar Lançamento (Antigo Pedidos) */}
+            {/* Link 2: Registrar Lançamento */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -116,6 +116,22 @@ export function Sidebar() {
               </TooltipTrigger>
               <TooltipContent side="right" className="bg-zinc-900 text-white border-zinc-800">
                 <p>Configurações</p>
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Link 4: Criptomoedas (Movido para dentro do nav com TooltipProvider) */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href="/dash-board/crypto"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition-colors hover:text-white hover:bg-zinc-900"
+                >
+                  <Coins className="h-5 w-5" />
+                  <span className="sr-only">Criptomoedas</span>
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="bg-zinc-900 text-white border-zinc-800">
+                <p>Criptomoedas</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -202,6 +218,15 @@ export function Sidebar() {
                 >
                   <Settings2 className="h-5 w-5 transition-all" />
                   Configurações
+                </Link>
+
+                {/* Link Criptomoedas adicionado no Menu Mobile */}
+                <Link
+                  href="/dash-board/crypto"
+                  className="flex items-center gap-4 px-2.5 text-zinc-400 hover:text-white"
+                >
+                  <Coins className="h-5 w-5 transition-all" />
+                  Criptomoedas
                 </Link>
               </nav>
 

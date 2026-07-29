@@ -5,6 +5,7 @@ import { DashboardCards } from "../../components/dashboard/cards";
 import { CustomCards } from "../../components/dashboard/cards/CustomCards";
 import ChartOverview from "../../components/dashboard/chartoverview";
 import { ChartPieInteractive } from "../../components/dashboard/chartpie";
+import { CryptoChart } from "@/components/dashboard/cryptochart/page"; // <--- 1. IMPORT ADICIONADO AQUI
 import { db, auth } from "@/lib/firebase";
 import { collection, query, where, onSnapshot, doc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
@@ -23,7 +24,7 @@ export default function DashboardPage() {
   const [userId, setUserId] = useState<string | null>(null);
   
   const [transactions, setTransactions] = useState<TransactionData[]>([]);
-  const [favoriteCategories, setFavoriteCategories] = useState<string[]>([]); // Estado das categorias favoritas
+  const [favoriteCategories, setFavoriteCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -65,7 +66,6 @@ export default function DashboardPage() {
         firebaseData={transactions}
       />
 
-      {/* Agora o array é dinâmico, vindo direto do banco */}
       <CustomCards 
         selectedYear={selectedYear}
         selectedMonth={selectedMonth}
@@ -91,6 +91,12 @@ export default function DashboardPage() {
           />
         </div>
       </div>
+
+      {/* 2. GRÁFICO DE CRIPTOMOEDAS ADICIONADO LOGO ABAIXO */}
+      <div className="w-full">
+        <CryptoChart />
+      </div>
+
     </main>
   );
 }
