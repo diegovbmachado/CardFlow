@@ -1,5 +1,4 @@
 "use client";
-import { CryptoChart } from "@/components/dashboard/cryptochart/page";
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -61,23 +60,20 @@ export default function LoginPage() {
   };
 
   return (
-    // Fundo totalmente preto da tela
     <main className="relative min-h-screen w-full bg-black text-white flex items-center overflow-hidden">
       
-      {/* 1. IMAGEM DO GLOBO (Alinhada à direita e cobrindo o lado direito no desktop) */}
+      {/* 1. IMAGEM DO GLOBO */}
       <div 
         className="absolute inset-y-0 right-0 w-full md:w-[60%] bg-[url('/bg-globe.jpg')] bg-cover bg-center md:bg-left pointer-events-none z-0 opacity-40 md:opacity-100"
-        style={{ backgroundPosition: 'left center' }} // Puxa o globo mais para a esquerda para esconder o texto "World Economics" original
+        style={{ backgroundPosition: 'left center' }}
       />
 
-      {/* 2. MÁSCARA DE DEGRADÊ (Faz a imagem sumir gradualmente no preto à esquerda) */}
-      {/* No Mobile: Máscara escura completa para dar leitura. No Desktop: Suave da esquerda para a direita */}
+      {/* 2. MÁSCARA DE DEGRADÊ */}
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/90 to-black/60 md:bg-gradient-to-r md:from-black md:via-black/85 md:to-transparent z-10 pointer-events-none" />
 
-      {/* 3. CONTEÚDO E FORMULÁRIO (Alinhado totalmente à esquerda no Desktop e centralizado no Mobile) */}
+      {/* 3. CONTEÚDO E FORMULÁRIO */}
       <div className="relative z-20 w-full max-w-md px-6 py-12 sm:px-12 md:ml-16 lg:ml-32 flex flex-col justify-center min-h-screen">
         
-        {/* Título Estilizado */}
         <div className="space-y-2 mb-8">
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
             Faça seu Login<span className="text-pink-500">.</span>
@@ -87,7 +83,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Exibição de erro */}
         {error && (
           <div className="mb-6 p-3 text-xs text-red-200 bg-red-950/40 border border-red-900 rounded-md font-semibold text-center backdrop-blur-sm">
             {error}
@@ -95,7 +90,6 @@ export default function LoginPage() {
         )}
 
         <form onSubmit={handleLogin} className="space-y-6">
-          {/* Campo Email */}
           <div className="grid gap-2">
             <Label htmlFor="email" className="text-sm font-bold text-zinc-300">
               Email
@@ -112,7 +106,6 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Campo Senha */}
           <div className="grid gap-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password" className="text-sm font-bold text-zinc-300">
@@ -140,10 +133,7 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Botões de Ação */}
           <div className="space-y-3 pt-2">
-            
-            {/* Botão de Entrar com o degradê do botão da Imagem 2 */}
             <Button
               type="submit"
               className="w-full text-base font-bold bg-gradient-to-r from-violet-600 via-fuchsia-600 to-amber-500 hover:opacity-90 text-white transition-all duration-300 py-6 rounded-lg"
@@ -152,7 +142,6 @@ export default function LoginPage() {
               {loading ? "Entrando..." : "Entrar"}
             </Button>
 
-            {/* Divisor */}
             <div className="relative w-full flex items-center justify-center py-2">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-zinc-800" />
@@ -162,7 +151,6 @@ export default function LoginPage() {
               </span>
             </div>
 
-            {/* Botão Google minimalista e escuro */}
             <Button
               type="button"
               variant="outline"
@@ -175,7 +163,6 @@ export default function LoginPage() {
           </div>
         </form>
 
-        {/* Link para criar conta */}
         <div className="mt-8 text-center md:text-left">
           <p className="text-sm text-zinc-400">
             Ainda não tem uma conta?{" "}

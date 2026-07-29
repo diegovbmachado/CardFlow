@@ -84,7 +84,7 @@ export function CryptoChart() {
           setPriceChange(change);
 
           // 4. Lógica de Disparo de Alerta de Preço
-          if (targetPrice && latestPrice >=  !alertTriggered) {
+          if (targetPrice && latestPrice >= targetPrice && !alertTriggered) {
             setAlertTriggered(true);
             if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
               new Notification("🚨 Alerta de Criptomoeda!", {
