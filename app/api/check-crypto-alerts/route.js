@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
 import * as admin from 'firebase-admin';
 
+export const dynamic = 'force-dynamic';
+
+// Inicializa o Firebase Admin SDK...
+
 // Inicializa o Firebase Admin SDK (usando as credenciais de ambiente do projeto)
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      projectId: 'controle-de-gastos2', // Fixado direto para evitar falhas
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      // O replace corrige quebras de linha na chave privada ao ler de variáveis de ambiente
       privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     }),
   });
