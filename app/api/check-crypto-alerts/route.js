@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server';
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 
 export const dynamic = 'force-dynamic';
 
-// Inicializa o Firebase Admin SDK...
-
-// Inicializa o Firebase Admin SDK (usando as credenciais de ambiente do projeto)
-if (!admin.apps.length) {
+// Inicializa o Firebase Admin SDK de forma segura
+if (!admin.apps || admin.apps.length === 0) {
   admin.initializeApp({
     credential: admin.credential.cert({
-      projectId: 'controle-de-gastos2', // Fixado direto para evitar falhas
+      projectId: 'controle-de-gastos2',
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
     }),
@@ -18,13 +16,12 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-export async function GET(request) {
+export async function GET() {
   try {
-    // 1. Busca o preço atual da cripto (exemplo puxando da Coingecko ou API que você já usa)
-    // Aqui você pode adaptar para a mesma API de preço que seu gráfico usa
+    // 1. Busca o preço atual da cripto
     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=axie-infinity&vs_currencies=brl');
     const data = await response.json();
-    const currentPrice = data['axie-infinity']?.brl; // Exemplo para o Axie Infinity
+    const currentPrice = data['axie-infinity']?.brl;
 
     if (!currentPrice) {
       return NextResponse.json({ error: 'Não foi possível buscar o preço atual' }, { status: 500 });
@@ -38,14 +35,10 @@ export async function GET(request) {
     for (const docSnap of settingsSnapshot.docs) {
       const userData = docSnap.data();
       const fcmToken = userData.fcmToken;
-      const upperAlert = parseFloat(userData.cryptoUpperAlert); // Valor limite superior cadastrado pelo usuário
+      const upperAlert = parseFloat(userData.cryptoUpperAlert);
 
-      // Se o usuário tem token e definiu um alerta de teto
       if (fcmToken && !isNaN(upperAlert)) {
-        // Se o preço atual for MAIOR ou IGUAL à meta do usuário
         if (currentPrice >= upperAlert) {
-          
-          // Prepara a mensagem Push para o Firebase Cloud Messaging
           const message = {
             token: fcmToken,
             notification: {
@@ -54,12 +47,11 @@ export async function GET(request) {
             },
             webpush: {
               fcmOptions: {
-                link: 'https://card-flow-o9wl.vercel.app/dash board' // Link para abrir o seu site ao clicar
+                link: 'https://card-flow-o9wl.vercel.app/dash board'
               }
             }
           };
 
-          // Envia a notificação em segundo plano
           await admin.messaging().send(message);
           notificationsSent.push({ userId: docSnap.id, price: currentPrice });
         }
