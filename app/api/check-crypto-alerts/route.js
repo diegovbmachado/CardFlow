@@ -14,6 +14,7 @@ if (!admin.apps || admin.apps.length === 0) {
   });
 }
 
+
 const db = admin.firestore();
 
 export async function GET() {
