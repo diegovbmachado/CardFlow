@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth"; // Importamos o GoogleAuthProvider
 import { getFirestore } from "firebase/firestore";
-
+import { getMessaging } from "firebase/messaging";
 // Suas credenciais reais obtidas do console do Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDrQmCPwhPtf_PAvj6IETDE7dP1hq12HTU",
@@ -21,3 +21,4 @@ const googleProvider = new GoogleAuthProvider();
 
 // Exportamos o auth e também o provedor do Google para usar nas telas
 export { auth, googleProvider };
+export const messaging = typeof window !== "undefined" ? getMessaging(app) : null;

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { db, auth } from "@/lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { Coins, CheckCircle2, TrendingUp, TrendingDown, RefreshCw, Trash2, Search, Loader2 } from "lucide-react";
+import { Coins, CheckCircle2, TrendingUp, TrendingDown, RefreshCw, Trash2, Search, Loader2, Bell } from "lucide-react";
 
 export default function CryptoSettingsPage() {
   const [coin, setCoin] = useState("bitcoin");
@@ -120,7 +120,7 @@ export default function CryptoSettingsPage() {
       } finally {
         setIsSearching(false);
       }
-    }, 500); // Debounce levemente maior para proteger as requisições
+    }, 500);
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery]);
@@ -136,7 +136,7 @@ export default function CryptoSettingsPage() {
 
     const updatedCoins = [...customCoins, coinId];
     setCustomCoins(updatedCoins);
-    setCoin(coinId); // Já seleciona automaticamente a nova moeda
+    setCoin(coinId);
     setSearchQuery("");
     setShowDropdown(false);
 
@@ -163,6 +163,33 @@ export default function CryptoSettingsPage() {
     if (userId) {
       const docRef = doc(db, "user_settings", userId);
       await setDoc(docRef, { customCoins: updatedCoins, cryptoAlertCoin: coin === coinToRemove ? updatedCoins[0] : coin }, { merge: true });
+    }
+  };
+
+  // Função para testar ou solicitar permissão de notificações manualmente
+  const handleTestNotification = async () => {
+    if (!("Notification" in window)) {
+      alert("Este navegador não suporta notificações de desktop.");
+      return;
+    }
+
+    if (Notification.permission === "granted") {
+      new Notification("🚀 Teste de Notificação - CardFlow", {
+        body: "Suas notificações estão funcionando perfeitamente!",
+      });
+      return;
+    }
+
+    if (Notification.permission === "denied") {
+      alert("As notificações estão bloqueadas nas configurações do seu navegador. Clique no ícone de cadeado 🔒 na barra de endereços para permitir.");
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission === "granted") {
+      new Notification("🚀 Sucesso!", {
+        body: "Permissão concedida com sucesso!",
+      });
     }
   };
 
@@ -199,15 +226,27 @@ export default function CryptoSettingsPage() {
   return (
     <main className="sm:pl-14 p-6 sm:p-10 text-white min-h-screen bg-zinc-950 flex flex-col items-center justify-center">
       <div className="w-full max-w-xl space-y-6">
-        <div>
-          <div className="flex items-center gap-2 text-purple-500 mb-1">
-            <Coins className="w-6 h-6" />
-            <span className="text-xs font-semibold uppercase tracking-wider">Módulo Web3</span>
+        
+        {/* Cabeçalho com o botão de testar notificações integrado de forma limpa */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-purple-500 mb-1">
+              <Coins className="w-6 h-6" />
+              <span className="text-xs font-semibold uppercase tracking-wider">Módulo Web3</span>
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight">Configurações de Criptomoedas</h1>
+            <p className="text-sm text-zinc-400">
+              Gerencie suas moedas com segurança e evite bloqueios de requisição da API pública.
+            </p>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight">Configurações de Criptomoedas</h1>
-          <p className="text-sm text-zinc-400">
-            Gerencie suas moedas com segurança e evite bloqueios de requisição da API pública.
-          </p>
+          
+          <button
+            type="button"
+            onClick={handleTestNotification}
+            className="self-start sm:self-auto flex items-center gap-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-purple-400 px-4 py-2.5 rounded-xl text-xs font-semibold transition shadow-sm"
+          >
+            <Bell className="w-4 h-4" /> Testar Notificação
+          </button>
         </div>
 
         {/* Bloco de Adicionar com Autocomplete */}
@@ -360,7 +399,7 @@ export default function CryptoSettingsPage() {
 
           {successMessage && (
             <div className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl text-sm animate-fade-in">
-              <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+              <CheckCircle2 className="w-5 h-5 shrink-0" />
               <span>Configurações salvas com sucesso no Firebase!</span>
             </div>
           )}
