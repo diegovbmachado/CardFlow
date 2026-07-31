@@ -3,22 +3,23 @@ import admin from 'firebase-admin';
 
 export const dynamic = 'force-dynamic';
 
-// Inicializa o Firebase Admin SDK de forma segura
-if (!admin.apps || admin.apps.length === 0) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: 'controle-de-gastos2',
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    }),
-  });
+function getDb() {
+  if (!admin.apps || admin.apps.length === 0) {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: 'controle-de-gastos2',
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      }),
+    });
+  }
+  return admin.firestore();
 }
-
-
-const db = admin.firestore();
 
 export async function GET() {
   try {
+    const db = getDb();
+
     // 1. Busca o preço atual da cripto
     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=axie-infinity&vs_currencies=brl');
     const data = await response.json();
