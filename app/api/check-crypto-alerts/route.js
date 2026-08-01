@@ -34,12 +34,15 @@ export async function GET() {
 
     const settingsSnapshot = await db.collection('user_settings').get();
     const notificationsSent = [];
+    const debugUsers = [];
 
     if (!settingsSnapshot.empty) {
       for (const docSnap of settingsSnapshot.docs) {
         const userData = docSnap.data();
         const fcmToken = userData?.fcmToken;
         const upperAlert = parseFloat(userData?.cryptoUpperAlert);
+
+        debugUsers.push({ id: docSnap.id, hasToken: !!fcmToken, upperAlert, currentPrice });
 
         if (fcmToken && !isNaN(upperAlert)) {
           if (currentPrice >= upperAlert) {
@@ -49,16 +52,27 @@ export async function GET() {
                 title: `🚀 Meta Batida!`,
                 body: `O preço atual da cripto atingiu R$ ${currentPrice} (Sua meta era R$ ${upperAlert}).`,
               },
+              webpush: {
+                notification: {
+                  title: `🚀 Meta Batida!`,
+                  body: `O preço atual da cripto atingiu R$ ${currentPrice} (Sua meta era R$ ${upperAlert}).`,
+                  icon: '/favicon.ico'
+                }
+              }
             };
 
-            await getMessaging().send(message);
-            notificationsSent.push({ userId: docSnap.id, price: currentPrice });
+            try {
+              await getMessaging().send(message);
+              notificationsSent.push({ userId: docSnap.id, price: currentPrice, status: 'sent' });
+            } catch (sendError) {
+              notificationsSent.push({ userId: docSnap.id, error: sendError.message });
+            }
           }
         }
       }
     }
 
-    return NextResponse.json({ success: true, currentPrice, notificationsSent });
+    return NextResponse.json({ success: true, currentPrice, debugUsers, notificationsSent });
   } catch (error) {
     console.error('Erro detalhado:', error);
     return NextResponse.json({ error: error.message, stack: error.stack }, { status: 500 });
