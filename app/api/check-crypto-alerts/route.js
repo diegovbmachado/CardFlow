@@ -40,13 +40,13 @@ export async function GET() {
           const message = {
             token: fcmToken,
             notification: {
-              title: `🚀 Alerta Forçado PC/Celular`,
-              body: `Teste global disparado pela Vercel! Preço atual: R$ ${currentPrice}`,
+              title: `🚀 Meta Batida!`,
+              body: `O preço atingiu o teto: R$ ${currentPrice}`,
             },
             webpush: {
               notification: {
-                title: `🚀 Alerta Forçado PC/Celular`,
-                body: `Teste global disparado pela Vercel! Preço atual: R$ ${currentPrice}`,
+                title: `🚀 Meta Batida!`,
+                body: `O preço atingiu o teto: R$ ${currentPrice}`,
                 icon: '/favicon.ico'
               }
             }
@@ -54,15 +54,21 @@ export async function GET() {
 
           try {
             await getMessaging().send(message);
-            notificationsSent.push({ userId: docSnap.id, tokenSnippet: fcmToken.substring(0, 10) + '...', status: 'sent' });
+            notificationsSent.push({ userId: docSnap.id, status: 'sent' });
           } catch (sendError) {
-            notificationsSent.push({ userId: docSnap.id, error: sendError.message });
+            // Se o token expirou ou é inválido, limpa do banco automaticamente
+            if (sendError.code === 'messaging/registration-token-not-registered' || sendError.message.includes('NotRegistered')) {
+              await db.collection('user_settings').doc(docSnap.id).update({ fcmToken: null });
+              notificationsSent.push({ userId: docSnap.id, error: 'Token removido por estar expirado/inválido' });
+            } else {
+              notificationsSent.push({ userId: docSnap.id, error: sendError.message });
+            }
           }
         }
       }
     }
 
-    return NextResponse.json({ success: true, currentPrice, totalDisparos: notificationsSent.length, notificationsSent });
+    return NextResponse.json({ success: true, currentPrice, notificationsSent });
   } catch (error) {
     console.error('Erro detalhado:', error);
     return NextResponse.json({ error: error.message, stack: error.stack }, { status: 500 });

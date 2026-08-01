@@ -28,7 +28,7 @@ export function CryptoChart() {
   // Estado para o Alerta Visual na Tela (Banner de Aviso)
   const [visualAlert, setVisualAlert] = useState<{ type: 'upper' | 'lower'; message: string } | null>(null);
 
-  // 0. Solicita permissão e registra o token FCM no Firebase
+  // 0. Solicita permissão e registra o token FCM no Firebase de forma acumulativa (suporta múltiplos dispositivos)
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user && messaging) {
@@ -42,8 +42,23 @@ export function CryptoChart() {
               
               if (token) {
                 const userRef = doc(db, "user_settings", user.uid);
-                await updateDoc(userRef, { fcmToken: token });
-                console.log("Token FCM salvo com sucesso no perfil!");
+                const docSnap = await getDoc(userRef);
+                
+                let existingTokens = [];
+                if (docSnap.exists() && docSnap.data().fcmTokens) {
+                  existingTokens = docSnap.data().fcmTokens;
+                } else if (docSnap.exists() && docSnap.data().fcmToken) {
+                  // Migração caso houvute token antigo único
+                  existingTokens = [docSnap.data().fcmToken];
+                }
+
+                // Adiciona o token atual se ele já não estiver na lista
+                if (!existingTokens.includes(token)) {
+                  existingTokens.push(token);
+                }
+
+                await updateDoc(userRef, { fcmTokens: existingTokens });
+                console.log("Token FCM deste dispositivo salvo com sucesso no perfil!");
               }
             }
           }
