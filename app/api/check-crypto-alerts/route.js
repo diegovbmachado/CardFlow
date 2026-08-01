@@ -4,7 +4,6 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // Importação dinâmica segura para evitar conflitos de empacotamento do Next.js
     const admin = await import('firebase-admin');
     const adminApp = admin.default;
 
@@ -20,6 +19,7 @@ export async function GET() {
 
     const db = adminApp.firestore();
 
+    // 1. Busca o preço atual da cripto
     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=axie-infinity&vs_currencies=brl');
     const data = await response.json();
     const currentPrice = data['axie-infinity']?.brl;
@@ -28,26 +28,29 @@ export async function GET() {
       return NextResponse.json({ error: 'Não foi possível buscar o preço atual' }, { status: 500 });
     }
 
+    // 2. Busca as configurações de usuários com segurança contra nulos
     const settingsSnapshot = await db.collection('user_settings').get();
     const notificationsSent = [];
 
-    for (const docSnap of settingsSnapshot.docs) {
-      const userData = docSnap.data();
-      const fcmToken = userData.fcmToken;
-      const upperAlert = parseFloat(userData.cryptoUpperAlert);
+    if (!settingsSnapshot.empty) {
+      for (const docSnap of settingsSnapshot.docs) {
+        const userData = docSnap.data();
+        const fcmToken = userData?.fcmToken;
+        const upperAlert = parseFloat(userData?.cryptoUpperAlert);
 
-      if (fcmToken && !isNaN(upperAlert)) {
-        if (currentPrice >= upperAlert) {
-          const message = {
-            token: fcmToken,
-            notification: {
-              title: `🚀 Meta Batida!`,
-              body: `O preço atual da cripto atingiu R$ ${currentPrice} (Sua meta era R$ ${upperAlert}).`,
-            },
-          };
+        if (fcmToken && !isNaN(upperAlert)) {
+          if (currentPrice >= upperAlert) {
+            const message = {
+              token: fcmToken,
+              notification: {
+                title: `🚀 Meta Batida!`,
+                body: `O preço atual da cripto atingiu R$ ${currentPrice} (Sua meta era R$ ${upperAlert}).`,
+              },
+            };
 
-          await adminApp.messaging().send(message);
-          notificationsSent.push({ userId: docSnap.id, price: currentPrice });
+            await adminApp.messaging().send(message);
+            notificationsSent.push({ userId: docSnap.id, price: currentPrice });
+          }
         }
       }
     }
