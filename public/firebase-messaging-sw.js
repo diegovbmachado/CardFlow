@@ -2,7 +2,7 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-  apiKey: "AIzaSyDrQmCPwhPtf_PAvj6IETDe7dP1hq12HTU",
+  apiKey: "AIzaSyDrqCMpwhPtf_PAvJ6IETde7DPlhQ12HTU",
   authDomain: "controle-de-gastos2.firebaseapp.com",
   projectId: "controle-de-gastos2",
   storageBucket: "controle-de-gastos2.appspot.com",
@@ -13,10 +13,11 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  const notificationTitle = payload.notification.title;
+  const notificationTitle = payload?.notification?.title || "Nova Notificação";
   const notificationOptions = {
-    body: payload.notification.body,
+    body: payload?.notification?.body || "Você tem uma nova atualização.",
     icon: '/favicon.ico'
   };
+
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
