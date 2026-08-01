@@ -4,15 +4,16 @@ import admin from 'firebase-admin';
 export const dynamic = 'force-dynamic';
 
 function getDb() {
-  console.log("CLIENT_EMAIL:", process.env.FIREBASE_CLIENT_EMAIL ? "Presente" : "Indefinido");
-  console.log("PRIVATE_KEY length:", process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.length : "Indefinido");
-
   if (!admin.apps || admin.apps.length === 0) {
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY 
+      ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n').replace(/"/g, '') 
+      : undefined;
+
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId: 'controle-de-gastos2',
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        privateKey: privateKey,
       }),
     });
   }
