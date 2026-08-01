@@ -6,7 +6,7 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "rec
 import { db, auth, messaging } from "@/lib/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { getToken } from "firebase/messaging";
+import { getToken, onMessage } from "firebase/messaging";
 
 export function CryptoChart() {
   const [selectedCoin, setSelectedCoin] = useState("bitcoin");
@@ -28,8 +28,10 @@ export function CryptoChart() {
   // Estado para o Alerta Visual na Tela (Banner de Aviso)
   const [visualAlert, setVisualAlert] = useState<{ type: 'upper' | 'lower'; message: string } | null>(null);
 
-  // 0. Solicita permissão e registra o token FCM no Firebase de forma acumulativa (suporta múltiplos dispositivos)
+  // 0. Solicita permissão, registra o token FCM e escuta mensagens em primeiro plano
   useEffect(() => {
+    let unsubscribeOnMessage: (() => void) | undefined;
+
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user && messaging) {
         try {
@@ -44,11 +46,10 @@ export function CryptoChart() {
                 const userRef = doc(db, "user_settings", user.uid);
                 const docSnap = await getDoc(userRef);
                 
-                let existingTokens = [];
+                let existingTokens: string[] = [];
                 if (docSnap.exists() && docSnap.data().fcmTokens) {
                   existingTokens = docSnap.data().fcmTokens;
                 } else if (docSnap.exists() && docSnap.data().fcmToken) {
-                  // Migração caso houvute token antigo único
                   existingTokens = [docSnap.data().fcmToken];
                 }
 
@@ -60,6 +61,17 @@ export function CryptoChart() {
                 await updateDoc(userRef, { fcmTokens: existingTokens });
                 console.log("Token FCM deste dispositivo salvo com sucesso no perfil!");
               }
+
+              // ESCUTA MENSAGENS QUANDO A ABA ESTÁ ABERTA (PRIMEIRO PLANO)
+              unsubscribeOnMessage = onMessage(messaging, (payload) => {
+                console.log("Mensagem recebida em primeiro plano:", payload);
+                const title = payload?.notification?.title || "Alerta Cripto";
+                const body = payload?.notification?.body || "Nova atualização de preço.";
+                
+                if (Notification.permission === "granted") {
+                  new Notification(title, { body });
+                }
+              });
             }
           }
         } catch (error) {
@@ -67,7 +79,13 @@ export function CryptoChart() {
         }
       }
     });
-    return () => unsubscribeAuth();
+
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeOnMessage) {
+        unsubscribeOnMessage();
+      }
+    };
   }, []);
 
   // 1. Busca as configurações salvas
