@@ -13,7 +13,13 @@ import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, query, where, onSnapshot } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
+/**
+ * Página de Gestão e Criação de Lançamentos (TransactionsPage).
+ * Permite ao usuário registrar novas receitas ou despesas, escolhendo a data, valor, 
+ * moeda e categoria (combinando categorias padrão e customizadas buscadas em tempo real do Firestore).
+ */
 export default function TransactionsPage() {
+  // Estados locais para gerenciar os campos do formulário de transação
   const [type, setType] = useState<"income" | "expense">("expense");
   const [date, setDate] = useState("");
   const [currency, setCurrency] = useState("BRL");
@@ -21,15 +27,20 @@ export default function TransactionsPage() {
   const [transactionType, setTransactionType] = useState("");
   const [description, setDescription] = useState("");
 
+  // Estados de controle de requisição e sessão
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   
-  // 🟢 Novo estado para categorias combinadas (Padrão + Customizadas)
+  // Estado para armazenar a lista unificada de categorias (Padrão + Customizadas do usuário)
   const [todasCategorias, setTodasCategorias] = useState<string[]>([]);
 
+  // Lista base de categorias padrão do sistema
   const categoriasPadrao = ["Acomodação", "Alimentação", "Outros", "Salário", "Supermercado", "Transporte"];
 
-  // Monitora o usuário e busca categorias personalizadas
+  /**
+   * Monitoramento em tempo real do estado de autenticação.
+   * Identifica e armazena o UID do usuário logado.
+   */
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       setUserId(user ? user.uid : null);
@@ -37,25 +48,33 @@ export default function TransactionsPage() {
     return () => unsubscribeAuth();
   }, []);
 
+  /**
+   * Sincronização de categorias personalizadas.
+   * Quando o usuário está autenticado, busca no Firestore as categorias criadas por ele,
+   * fazendo o merge com as categorias padrão e removendo duplicatas.
+   */
   useEffect(() => {
     if (!userId) {
       setTodasCategorias(categoriasPadrao);
       return;
     }
 
-    // Busca categorias customizadas do Firestore
     const q = query(collection(db, "categories"), where("userId", "==", userId));
     const unsubscribeCats = onSnapshot(q, (snapshot) => {
       const customCats = snapshot.docs.map(doc => doc.data().name);
-      // Mescla as padrão com as customizadas e remove duplicatas
       setTodasCategorias([...new Set([...categoriasPadrao, ...customCats])]);
     });
 
     return () => unsubscribeCats();
   }, [userId]);
 
+  // Validação booleana dos campos obrigatórios do formulário
   const isFormValid = Boolean(date && currency && value && transactionType && userId && !loading);
 
+  /**
+   * Manipulador de submissão do formulário.
+   * Cria o objeto da transação vinculado ao UID do usuário e o persiste na coleção do Firestore.
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid || !userId) return;
@@ -72,8 +91,10 @@ export default function TransactionsPage() {
         user: { uid: userId }
       };
 
+      // Adiciona o documento à coleção "transactions" no Firestore
       await addDoc(collection(db, "transactions"), novaTransacao);
       
+      // Reseta os campos do formulário após o sucesso
       setDate("");
       setValue("");
       setDescription("");
@@ -91,6 +112,8 @@ export default function TransactionsPage() {
   return (
     <main className="sm:ml-14 p-4 md:p-6 bg-transparent min-h-screen flex items-center justify-center">
       <Card className="w-full max-w-lg bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 text-white shadow-2xl">
+        
+        {/* Cabeçalho do Card */}
         <CardHeader className="border-b border-zinc-800/50 pb-4">
           <CardTitle className="text-xl font-bold text-white">Novo Lançamento</CardTitle>
           <CardDescription className="text-zinc-400 text-xs">
@@ -100,7 +123,8 @@ export default function TransactionsPage() {
 
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* ... RadioGroup e Inputs (Manter igual) ... */}
+            
+            {/* Seletor de Tipo (Despesa ou Receita) via RadioGroup */}
             <div className="space-y-2">
                <Label className="text-zinc-300 font-semibold">Transação</Label>
                <RadioGroup value={type} onValueChange={(val) => setType(val as "income" | "expense")} className="flex gap-4">
@@ -115,10 +139,13 @@ export default function TransactionsPage() {
                </RadioGroup>
             </div>
 
+            {/* Campo de Data */}
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-zinc-950/40 border-zinc-800" />
+            
+            {/* Campo de Valor Numérico */}
             <Input type="number" placeholder="0,00" value={value} onChange={(e) => setValue(e.target.value)} className="bg-zinc-950/40 border-zinc-800" />
 
-            {/* SELETOR DINÂMICO */}
+            {/* Seletor Dinâmico de Categoria */}
             <Select value={transactionType} onValueChange={setTransactionType}>
               <SelectTrigger className="bg-zinc-950/40 border-zinc-800">
                 <SelectValue placeholder="Selecione a categoria" />
@@ -130,6 +157,7 @@ export default function TransactionsPage() {
               </SelectContent>
             </Select>
 
+            {/* Botão de Submissão com Indicador de Carregamento */}
             <Button type="submit" disabled={!isFormValid} className="w-full bg-purple-600">
               {loading ? <Loader2 className="animate-spin" /> : "Salvar"}
             </Button>

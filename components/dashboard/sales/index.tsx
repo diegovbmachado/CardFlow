@@ -8,9 +8,16 @@ import {
 } from "../../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+/**
+ * Componente de Cartão de Vendas / Novos Clientes (Sales).
+ * Exibe um resumo visual em formato de lista contendo os dados dos clientes 
+ * cadastrados mais recentemente no sistema nas últimas 24 horas.
+ */
 export function Sales() {
   return (
     <Card className="flex-1 bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 text-white shadow-xl">
+      
+      {/* Cabeçalho do Cartão: Título, ícone indicativo e descrição do escopo temporal */}
       <CardHeader>
         <div className="flex items-center justify-center">
           <CardTitle className="text-base sm:text-lg font-bold text-white">
@@ -23,8 +30,10 @@ export function Sales() {
         </CardDescription>
       </CardHeader>
       
+      {/* Corpo do Cartão: Lista estruturada com os registros dos clientes recentes */}
       <CardContent className="space-y-1">
-        {/* Cliente 1 */}
+        
+        {/* Item de Cliente 1 */}
         <article className="flex items-center gap-3 border-b border-zinc-800/50 py-3 last:border-b-0">
           <Avatar className="w-8 h-8 border border-zinc-800">
             <AvatarImage src="http://github.com/diegovbmachado.png" />
@@ -40,7 +49,7 @@ export function Sales() {
           </div>
         </article>
 
-        {/* Cliente 2 */}
+        {/* Item de Cliente 2 */}
         <article className="flex items-center gap-3 border-b border-zinc-800/50 py-3 last:border-b-0">
           <Avatar className="w-8 h-8 border border-zinc-800">
             <AvatarImage src="http://github.com/diegovbmachado.png" />
@@ -56,7 +65,7 @@ export function Sales() {
           </div>
         </article>
 
-        {/* Cliente 3 */}
+        {/* Item de Cliente 3 */}
         <article className="flex items-center gap-3 border-b border-zinc-800/50 py-3 last:border-b-0">
           <Avatar className="w-8 h-8 border border-zinc-800">
             <AvatarImage src="http://github.com/diegovbmachado.png" />

@@ -1,10 +1,15 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BadgeDollarSign, DollarSign, Percent, Users } from "lucide-react";
 
+/**
+ * Componente de Visão Geral de Indicadores Comerciais (CardOverview).
+ * Renderiza um grid de cartões informativos estáticos destacando métricas de negócio,
+ * como faturamento em 90 dias, novos clientes, volume de pedidos diários e totais mensais.
+ */
 export function CardOverview() {
   return (
     <>
-      {/* CARD 1: Total de vendas */}
+      {/* CARD 1: TOTAL DE VENDAS (Métrica acumulada dos últimos 90 dias) */}
       <Card className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 text-white shadow-xl">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-between">
@@ -22,7 +27,7 @@ export function CardOverview() {
         </CardContent>
       </Card>
 
-      {/* CARD 2: Novos clientes */}
+      {/* CARD 2: NOVOS CLIENTES (Volume de captação nos últimos 30 dias) */}
       <Card className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 text-white shadow-xl">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-between">
@@ -40,7 +45,7 @@ export function CardOverview() {
         </CardContent>
       </Card>
 
-      {/* CARD 3: Pedidos hoje */}
+      {/* CARD 3: PEDIDOS HOJE (Volume de transações processadas no dia corrente) */}
       <Card className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 text-white shadow-xl">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-between">
@@ -58,7 +63,7 @@ export function CardOverview() {
         </CardContent>
       </Card>
 
-      {/* CARD 4: Total pedidos */}
+      {/* CARD 4: TOTAL DE PEDIDOS (Volume consolidado de pedidos nos últimos 30 dias) */}
       <Card className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 text-white shadow-xl">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-between">

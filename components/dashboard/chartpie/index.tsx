@@ -25,7 +25,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Configuração de cores para as categorias cadastradas no seu Firestore
+/**
+ * Mapeamento de configuração de cores e rótulos para cada categoria financeira.
+ * Utilizado pelo container de gráficos para estilizar dinamicamente o gráfico de pizza.
+ */
 const chartConfig = {
   value: { label: "Total" },
   Acomodação: { label: "Acomodação", color: "#a855f7" }, // Roxo
@@ -42,13 +45,17 @@ interface ChartPieProps {
   setSelectedMonth: (month: string) => void;
   firebaseData: Array<{
     type: "expense" | "income";
-    // 🟢 Especificando exatamente os formatos possíveis que tratamos no código:
     date: string | Date | { seconds: number; nanoseconds: number };
     transactionType?: string;
     money?: { value: number };
   }>;
 }
 
+/**
+ * Componente Interativo de Gráfico de Pizza (ChartPieInteractive).
+ * Agrupa, filtra e exibe a distribuição de receitas ou despesas por categoria
+ * com base no mês e ano selecionados pelo usuário, integrando dados vindos do Firestore.
+ */
 export function ChartPieInteractive({
   selectedYear,
   selectedMonth,
@@ -56,9 +63,12 @@ export function ChartPieInteractive({
   firebaseData,
 }: ChartPieProps) {
   const id = "pie-categories";
+  
+  // Estados locais para alternar entre visualização de despesas ou receitas e categoria ativa
   const [viewType, setViewType] = useState<"expense" | "income">("expense");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
+  // Dicionário de conversão numérica de meses para formato textual por extenso
   const mesesExtenso: Record<string, string> = {
     "01": "Janeiro",
     "02": "Fevereiro",
@@ -74,19 +84,21 @@ export function ChartPieInteractive({
     "12": "Dezembro",
   };
 
-  // 1. Filtra os dados com base no Ano, Mês e Tipo de Transação selecionados
+  /**
+   * Processamento e filtragem dos dados brutos do Firebase.
+   * Agrupa os valores por categoria considerando o ano, mês e tipo (receita/despesa) vigentes.
+   */
   const pieData = useMemo(() => {
     const categoriasAcumuladas: Record<string, number> = {};
 
     firebaseData.forEach((trans) => {
       if (trans.type !== viewType || !trans.date) return;
 
-      // 🟢 TRATAMENTO DE DATA ULTRA SEGURO REFEITO SEM PALAVRAS BANIDAS PELO LINTER:
+      // Tratamento seguro para diferentes formatos de data salvos no Firestore (String, Date ou Timestamp)
       let dateStr = "";
       if (typeof trans.date === "string") {
         dateStr = trans.date;
       } else if (trans.date && typeof trans.date === "object" && "seconds" in trans.date) {
-        // Casting seguro para uma estrutura de objeto mapeada, liberando o método .toISOString()
         const timestamp = trans.date as { seconds: number };
         dateStr = new Date(timestamp.seconds * 1000).toISOString();
       } else if (trans.date instanceof Date) {
@@ -103,6 +115,7 @@ export function ChartPieInteractive({
       }
     });
 
+    // Mapeia o objeto acumulado para o formato aceito pelo Recharts
     return Object.entries(categoriasAcumuladas).map(([category, total]) => {
       const categoryConfig = chartConfig[category as keyof typeof chartConfig];
       const fillColor =
@@ -118,16 +131,21 @@ export function ChartPieInteractive({
     });
   }, [firebaseData, selectedYear, selectedMonth, viewType]);
 
+  // Identifica o índice da fatia ativa para efeitos visuais de foco
   const activeIndex = useMemo(() => {
     if (!activeCategory) return 0;
     const idx = pieData.findIndex((item) => item.category === activeCategory);
     return idx === -1 ? 0 : idx;
   }, [activeCategory, pieData]);
 
+  // Calcula o somatório geral do período para exibir no centro do gráfico de rosca
   const totalGeralMes = useMemo(() => {
     return pieData.reduce((acc, curr) => acc + curr.value, 0);
   }, [pieData]);
 
+  /**
+   * Renderizador customizado para destacar a fatia da pizza quando houver interação (hover).
+   */
   const renderPieShape = useCallback(
     ({ index, outerRadius = 0, ...props }: PieSectorShapeProps) => {
       if (index === activeIndex && pieData.length > 0) {
@@ -153,6 +171,8 @@ export function ChartPieInteractive({
       className="flex flex-col bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 text-white shadow-xl overflow-hidden"
     >
       <ChartStyle id={id} config={chartConfig} />
+      
+      {/* Cabeçalho do Card com título dinâmico e controles de seleção (Despesa/Receita e Mês) */}
       <CardHeader className="flex flex-col gap-4 border-b border-zinc-800/50 p-6 pb-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div className="grid gap-1">
           <CardTitle className="text-base font-bold text-white">
@@ -167,7 +187,8 @@ export function ChartPieInteractive({
 
         {/* Contêiner de seletores alinhados */}
         <div className="flex items-center gap-2">
-          {/* Seletor Despesa / Receita */}
+          
+          {/* Seletor de Tipo de Visualização: Despesas ou Receitas */}
           <Select
             value={viewType}
             onValueChange={(val: "expense" | "income") => {
@@ -184,7 +205,7 @@ export function ChartPieInteractive({
             </SelectContent>
           </Select>
 
-          {/* Seletor de Mês */}
+          {/* Seletor de Mês de referência */}
           <Select value={selectedMonth} onValueChange={setSelectedMonth}>
             <SelectTrigger className="w-[100px] bg-zinc-950/50 border-zinc-800 text-zinc-300 rounded-lg h-8 text-xs focus:ring-purple-500">
               <SelectValue placeholder="Mês" />
@@ -207,6 +228,7 @@ export function ChartPieInteractive({
         </div>
       </CardHeader>
 
+      {/* Corpo do Cartão: Exibe o gráfico de rosca ou mensagem de dados vazios */}
       <CardContent className="flex flex-1 flex-col justify-center p-6 pb-4">
         {pieData.length === 0 ? (
           <div className="flex h-[260px] items-center justify-center text-zinc-500 text-xs font-medium">
@@ -247,6 +269,7 @@ export function ChartPieInteractive({
                     setActiveCategory(pieData[index].category);
                 }}
               >
+                {/* Rótulo centralizado do gráfico exibindo o montante total do período */}
                 <Label
                   content={({ viewBox }) => {
                     if (viewBox && "cx" in viewBox && "cy" in viewBox) {
@@ -257,7 +280,6 @@ export function ChartPieInteractive({
                           textAnchor="middle"
                           dominantBaseline="middle"
                         >
-                          {/* 🟢 Corrigido: Usando <tspan> puro para alinhar corretamente no centro do SVG */}
                           <tspan
                             x={viewBox.cx}
                             y={viewBox.cy}

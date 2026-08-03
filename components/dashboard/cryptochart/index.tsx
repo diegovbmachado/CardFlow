@@ -8,7 +8,13 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { getToken, onMessage } from "firebase/messaging";
 
+/**
+ * Componente principal do gráfico de criptomoedas e sistema de alertas em tempo real.
+ * Gerencia a busca de dados na CoinGecko, salvamento de tokens FCM para múltiplos dispositivos
+ * e escuta de notificações push (tanto em background quanto em primeiro plano).
+ */
 export function CryptoChart() {
+  // Estados locais para controle de ativos, limites de alerta, período do gráfico e carregamento
   const [selectedCoin, setSelectedCoin] = useState("bitcoin");
   const [availableCoins, setAvailableCoins] = useState<string[]>([
     "bitcoin",
@@ -25,19 +31,26 @@ export function CryptoChart() {
   const [loading, setLoading] = useState(true);
   const [lastChecked, setLastChecked] = useState<string>("");
 
-  // Estado para o Alerta Visual na Tela (Banner de Aviso)
+  // Estado para exibir o Banner Visual de Alerta diretamente na interface do usuário
   const [visualAlert, setVisualAlert] = useState<{ type: 'upper' | 'lower'; message: string } | null>(null);
 
-  // 0. Solicita permissão, registra o token FCM e escuta mensagens em primeiro plano
+  /**
+   * Effect 0: Gerenciamento de Autenticação, Permissão de Notificações, Registro de Tokens FCM (Multi-dispositivo)
+   * e Listener de Mensagens em Primeiro Plano (Foreground).
+   */
   useEffect(() => {
     let unsubscribeOnMessage: (() => void) | undefined;
 
+    // Monitora o estado de autenticação do usuário no Firebase Auth
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user && messaging) {
         try {
+          // Verifica se o ambiente suporta notificações do navegador
           if (typeof window !== "undefined" && "Notification" in window) {
             const permission = await Notification.requestPermission();
+            
             if (permission === "granted") {
+              // Obtém o token FCM exclusivo deste dispositivo usando a chave VAPID pública
               const token = await getToken(messaging, {
                 vapidKey: "BNr3BLcnDz071iGoW_CCZjzRl3Sq1RQq5n3jfFu8LBlP78kINsE_TKBwR8q5czVDTZIugTgJyyrmcpUlY6YvfRk"
               });
@@ -46,6 +59,7 @@ export function CryptoChart() {
                 const userRef = doc(db, "user_settings", user.uid);
                 const docSnap = await getDoc(userRef);
                 
+                // Trata a estrutura de tokens (suporta múltiplos dispositivos salvos em array)
                 let existingTokens: string[] = [];
                 if (docSnap.exists() && docSnap.data().fcmTokens) {
                   existingTokens = docSnap.data().fcmTokens;
@@ -53,21 +67,23 @@ export function CryptoChart() {
                   existingTokens = [docSnap.data().fcmToken];
                 }
 
-                // Adiciona o token atual se ele já não estiver na lista
+                // Evita duplicidade adicionando apenas se o token atual ainda não estiver salvo
                 if (!existingTokens.includes(token)) {
                   existingTokens.push(token);
                 }
 
+                // Atualiza o documento do usuário no Firestore com a lista consolidada de tokens
                 await updateDoc(userRef, { fcmTokens: existingTokens });
                 console.log("Token FCM deste dispositivo salvo com sucesso no perfil!");
               }
 
-              // ESCUTA MENSAGENS QUANDO A ABA ESTÁ ABERTA (PRIMEIRO PLANO)
+              // Configura o listener para interceptar mensagens recebidas enquanto a aba está aberta (Foreground)
               unsubscribeOnMessage = onMessage(messaging, (payload) => {
                 console.log("Mensagem recebida em primeiro plano:", payload);
                 const title = payload?.notification?.title || "Alerta Cripto";
                 const body = payload?.notification?.body || "Nova atualização de preço.";
                 
+                // Dispara o pop-up nativo do navegador caso permitido
                 if (Notification.permission === "granted") {
                   new Notification(title, { body });
                 }
@@ -80,6 +96,7 @@ export function CryptoChart() {
       }
     });
 
+    // Limpeza dos listeners ao desmontar o componente para evitar vazamento de memória
     return () => {
       unsubscribeAuth();
       if (unsubscribeOnMessage) {
@@ -88,15 +105,20 @@ export function CryptoChart() {
     };
   }, []);
 
-  // 1. Busca as configurações salvas
+  /**
+   * Effect 1: Busca e sincroniza as configurações personalizadas do usuário salvas no Firestore
+   * (moedas favoritas, limites de teto e piso configurados).
+   */
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         try {
           const docRef = doc(db, "user_settings", user.uid);
           const docSnap = await getDoc(docRef);
+          
           if (docSnap.exists()) {
             const data = docSnap.data();
+            
             if (data.customCoins && Array.isArray(data.customCoins) && data.customCoins.length > 0) {
               setAvailableCoins(data.customCoins);
             }
@@ -120,11 +142,15 @@ export function CryptoChart() {
     return () => unsubscribe();
   }, []);
 
-  // 2. Função principal que busca dados com tratamento seguro para o limite da API (429)
+  /**
+   * Effect 2: Motor principal de requisição de dados de mercado (CoinGecko API)
+   * e validação de regras de negócio para disparos de alertas (teto e piso).
+   */
   useEffect(() => {
     async function fetchCryptoData(isBackgroundUpdate = false) {
       if (!selectedCoin) return;
       
+      // Controla o estado de loading apenas na primeira carga ou troca de ativo
       if (!isBackgroundUpdate) {
         setLoading(true);
       }
@@ -134,7 +160,7 @@ export function CryptoChart() {
           `https://api.coingecko.com/api/v3/coins/${selectedCoin}/market_chart?vs_currency=brl&days=${days}`
         );
 
-        // Tratamento para evitar quebra quando a API do CoinGecko limitar as requisições (429 Throttled)
+        // Tratamento preventivo para o limite de requisições da API pública (HTTP 429 - Throttled)
         if (res.status === 429) {
           console.warn("Limite da API do CoinGecko atingido temporariamente (429).");
           return;
@@ -142,7 +168,7 @@ export function CryptoChart() {
 
         const textResponse = await res.text();
         
-        // Garante que a resposta é um JSON válido
+        // Validação de segurança para garantir integridade do JSON retornado
         if (!textResponse.startsWith("{") && !textResponse.startsWith("[")) {
           console.warn("Resposta bloqueada ou inválida da API:", textResponse);
           return;
@@ -151,6 +177,7 @@ export function CryptoChart() {
         const data = JSON.parse(textResponse);
 
         if (data && data.prices) {
+          // Mapeia e formata os dados brutos para exibição no gráfico de área (Recharts)
           const formattedData = data.prices.map((item: [number, number]) => {
             const date = new Date(item[0]);
             const timeLabel =
@@ -166,17 +193,19 @@ export function CryptoChart() {
 
           setChartData(formattedData);
 
+          // Extração do preço mais recente da série histórica
           const rawPrice = data.prices[data.prices.length - 1][1];
           const latestPrice = Number(rawPrice.toFixed(2));
           
           setCurrentPrice(latestPrice);
 
+          // Cálculo da variação percentual do período selecionado
           const firstPrice = data.prices[0][1];
           const change = ((latestPrice - firstPrice) / firstPrice) * 100;
           setPriceChange(change);
           setLastChecked(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
 
-          // Validação dos Alertas (Visual na tela + Notificação nativa caso o navegador permita)
+          // Validação dos Limites de Alerta configurados pelo usuário
           const numericUpper = upperAlert ? Number(upperAlert.toFixed(2)) : null;
           const numericLower = lowerAlert ? Number(lowerAlert.toFixed(2)) : null;
 
@@ -186,6 +215,7 @@ export function CryptoChart() {
               message: `🚀 ALERTA DE TETO ATINGIDO! Preço: R$ ${latestPrice.toFixed(2)} (Seu Teto: R$ ${numericUpper.toFixed(2)})`
             });
 
+            // Dispara notificação nativa imediata caso o preço ultrapasse o teto
             if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
               try { new Notification("🚀 Alerta de Teto - Cripto!", { body: `Preço: R$ ${latestPrice.toFixed(2)}` }); } catch(e) {}
             }
@@ -195,6 +225,7 @@ export function CryptoChart() {
               message: `⚠️ ALERTA DE PISO ATINGIDO! Preço: R$ ${latestPrice.toFixed(2)} (Seu Piso: R$ ${numericLower.toFixed(2)})`
             });
 
+            // Dispara notificação nativa imediata caso o preço caia abaixo do piso
             if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
               try { new Notification("⚠️ Alerta de Piso - Cripto!", { body: `Preço: R$ ${latestPrice.toFixed(2)}` }); } catch(e) {}
             }
@@ -211,9 +242,10 @@ export function CryptoChart() {
       }
     }
 
+    // Execução inicial ao carregar o componente
     fetchCryptoData(false);
 
-    // Verificação automática a cada 2 minutos
+    // Configuração de polling: Atualização automática do gráfico e verificação a cada 2 minutos
     const intervalTime = 120 * 1000; 
     const intervalId = setInterval(() => {
       fetchCryptoData(true);
@@ -223,7 +255,10 @@ export function CryptoChart() {
 
   }, [selectedCoin, days, upperAlert, lowerAlert]);
 
-  // Botões de Teste Manual (Forçam o Banner Visual na Hora)
+  /**
+   * Funções de Teste Manual (Painel QA):
+   * Permitem simular cenários de teto e piso diretamente na interface para validação visual.
+   */
   const handleSimulateUpper = () => {
     const fakePrice = 10.00;
     const fakeUpper = 5.00; 
@@ -251,7 +286,7 @@ export function CryptoChart() {
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-white flex flex-col justify-between shadow-xl relative overflow-hidden">
       
-      {/* BANNER DE ALERTA VISUAL NA TELA (Sempre visível se bater a meta) */}
+      {/* Banner dinâmico de alerta visual exibido na interface quando uma meta é atingida */}
       {visualAlert && (
         <div className={`mb-4 p-4 rounded-xl border flex items-center justify-between animate-pulse ${
           visualAlert.type === 'upper' 
@@ -271,7 +306,7 @@ export function CryptoChart() {
         </div>
       )}
 
-      {/* Cabeçalho do Card */}
+      {/* Cabeçalho do Card: Informações da moeda, variação percentual, preço atual e seletores */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -315,7 +350,7 @@ export function CryptoChart() {
             )}
           </div>
 
-          {/* PAINEL DE TESTE QA */}
+          {/* Painel QA para testes manuais rápidos de simulação de alertas */}
           <div className="flex flex-wrap items-center gap-2 mt-3 pt-2 border-t border-zinc-800/80">
             <span className="text-[10px] text-zinc-400 font-semibold uppercase">Painel QA / Teste:</span>
             <button
@@ -335,6 +370,7 @@ export function CryptoChart() {
           </div>
         </div>
 
+        {/* Controles de seleção de ativo e período (24h ou 7 dias) */}
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={selectedCoin}
@@ -369,7 +405,7 @@ export function CryptoChart() {
         </div>
       </div>
 
-      {/* Corpo do Gráfico */}
+      {/* Renderização do Gráfico de Área utilizando a biblioteca Recharts */}
       <div className="h-62.5 w-full">
         {loading ? (
           <div className="h-full flex items-center justify-center text-zinc-500 gap-2">

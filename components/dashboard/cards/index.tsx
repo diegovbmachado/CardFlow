@@ -17,9 +17,16 @@ interface DashboardCardsProps {
   firebaseData: TransactionData[];
 }
 
+/**
+ * Componente de Cartões Principais do Dashboard (DashboardCards).
+ * Processa as transações do mês/ano filtrados e calcula os indicadores globais:
+ * Saldo Líquido, Total de Receitas, Total de Despesas e Taxa de Comprometimento.
+ */
 export function DashboardCards({ selectedYear, selectedMonth, firebaseData }: DashboardCardsProps) {
   
-  // Realiza todos os cálculos matemáticos baseados nos filtros reativos
+  /**
+   * Memoriza o cálculo matemático das métricas macro para evitar reprocessamentos desnecessários.
+   */
   const metrics = useMemo(() => {
     let totalIncome = 0;
     let totalExpense = 0;
@@ -27,7 +34,7 @@ export function DashboardCards({ selectedYear, selectedMonth, firebaseData }: Da
     firebaseData.forEach((trans) => {
       if (!trans.date) return;
 
-      // Tratamento de data ultra seguro (idêntico ao dos gráficos)
+      // Tratamento seguro para conversão de datas vindas do Firestore (String, Date ou Timestamp)
       let dateStr = "";
       if (typeof trans.date === "string") {
         dateStr = trans.date;
@@ -42,7 +49,7 @@ export function DashboardCards({ selectedYear, selectedMonth, firebaseData }: Da
 
       const [ano, mes] = dateStr.split("-");
 
-      // Agrupa apenas os dados do mês e ano atualmente selecionados
+      // Filtra e acumula valores estritamente para o ano e mês selecionados
       if (ano === selectedYear && mes === selectedMonth) {
         const valor = trans.money?.value || 0;
         if (trans.type === "income") {
@@ -55,7 +62,7 @@ export function DashboardCards({ selectedYear, selectedMonth, firebaseData }: Da
 
     const balance = totalIncome - totalExpense;
     
-    // Cálculo de conversão (Saídas em relação às Entradas)
+    // Cálculo da taxa percentual de comprometimento da receita com despesas
     const expenseRate = totalIncome > 0 ? (totalExpense / totalIncome) * 100 : 0;
 
     return {
@@ -66,6 +73,9 @@ export function DashboardCards({ selectedYear, selectedMonth, firebaseData }: Da
     };
   }, [firebaseData, selectedYear, selectedMonth]);
 
+  /**
+   * Função auxiliar para formatar valores numéricos para o padrão de moeda Real (BRL).
+   */
   const formatCurrency = (value: number) => {
     return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   };
@@ -73,7 +83,7 @@ export function DashboardCards({ selectedYear, selectedMonth, firebaseData }: Da
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 w-full">
       
-      {/* CARD 1: SALDO ATUAL */}
+      {/* CARD 1: SALDO DISPONÍVEL (Balanço Líquido) */}
       <Card className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 text-white shadow-xl">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
@@ -91,7 +101,7 @@ export function DashboardCards({ selectedYear, selectedMonth, firebaseData }: Da
         </CardContent>
       </Card>
 
-      {/* CARD 2: TOTAL ENTRADAS */}
+      {/* CARD 2: TOTAL DE RECEITAS (Ganhos do Período) */}
       <Card className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 text-white shadow-xl">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
@@ -109,7 +119,7 @@ export function DashboardCards({ selectedYear, selectedMonth, firebaseData }: Da
         </CardContent>
       </Card>
 
-      {/* CARD 3: TOTAL SAÍDAS */}
+      {/* CARD 3: TOTAL DE DESPESAS (Gastos do Período) */}
       <Card className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 text-white shadow-xl">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">
@@ -127,7 +137,7 @@ export function DashboardCards({ selectedYear, selectedMonth, firebaseData }: Da
         </CardContent>
       </Card>
 
-      {/* CARD 4: TAXA DE CONSUMO / COMPROMETIMENTO */}
+      {/* CARD 4: TAXA DE COMPROMETIMENTO (Percentual gasto em relação à receita) */}
       <Card className="bg-zinc-900/40 backdrop-blur-md border border-zinc-800/50 text-white shadow-xl">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-xs font-bold uppercase tracking-wider text-zinc-400">

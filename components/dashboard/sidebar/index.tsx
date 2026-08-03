@@ -6,7 +6,7 @@ import { Button } from "../../ui/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// Importações do Firebase
+// Importações do Firebase para autenticação e gerenciamento de sessão
 import { signOut, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
@@ -27,11 +27,21 @@ import {
 } from "../../ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+/**
+ * Componente de Navegação Lateral (Sidebar / Menu Mobile) responsivo.
+ * Responsável por gerenciar as rotas principais da aplicação, exibir as informações
+ * do usuário autenticado e controlar o fluxo de encerramento de sessão (Logout).
+ */
 export function Sidebar() {
   const router = useRouter();
+  
+  // Estado local para armazenar os dados do usuário logado via Firebase Auth
   const [user, setUser] = useState<FirebaseUser | null>(null);
 
-  // Monitora se o usuário está logado e pega as informações dele
+  /**
+   * Monitoramento em tempo real do estado de autenticação do usuário.
+   * Adiciona um observer ao carregar o componente e o limpa ao desmontar (Memory Leak Prevention).
+   */
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -39,17 +49,23 @@ export function Sidebar() {
     return () => unsubscribe();
   }, []);
 
-  // Função para fazer logout e voltar para a home de login
+  /**
+   * Função assíncrona responsável por encerrar a sessão atual do usuário no Firebase
+   * e redirecioná-lo de volta para a página inicial (Login).
+   */
   const handleSignOut = async () => {
     try {
       await signOut(auth);
-      router.push("/"); // Redireciona para a página inicial de login
+      router.push("/"); // Redirecionamento para a raiz de autenticação
     } catch (error) {
-      console.error("Erro ao sair:", error);
+      console.error("Erro ao encerrar sessão:", error);
     }
   };
 
-  // Pega a inicial do e-mail ou nome para mostrar no Avatar caso não tenha foto
+  /**
+   * Função auxiliar para gerar uma letra Fallback (inicial) caso o usuário
+   * não possua foto de perfil cadastrada (prioriza Nome e depois E-mail).
+   */
   const getFallbackLetter = () => {
     if (user?.displayName) return user.displayName.charAt(0).toUpperCase();
     if (user?.email) return user.email.charAt(0).toUpperCase();
@@ -58,11 +74,17 @@ export function Sidebar() {
 
   return (
     <div className="flex w-full flex-col bg-zinc-950">
-      {/* SIDEBAR PARA COMPUTADOR (Telas maiores que 'sm') */}
+      
+      {/* ---------------------------------------------------- */}
+      {/* SIDEBAR PARA COMPUTADOR (Visível apenas em telas 'sm' ou maiores) */}
+      {/* ---------------------------------------------------- */}
       <aside className="fixed inset-y-0 left-0 z-50 hidden w-14 border-r border-zinc-900 bg-zinc-950 sm:flex flex-col">
+        
+        {/* Bloco Superior: Navegação Principal com Tooltips */}
         <nav className="flex flex-col items-center gap-4 px-2 py-5">
           <TooltipProvider>
-            {/* Logo do App - Ícone de Carteira */}
+            
+            {/* Logo do App / Atalho para o Dashboard */}
             <Link
               href="/dash-board"
               className="flex h-9 w-9 shrink-0 items-center justify-center bg-purple-600 text-white rounded-full shadow-lg shadow-purple-500/20"
@@ -71,7 +93,7 @@ export function Sidebar() {
               <span className="sr-only">CardFlow</span>
             </Link>
 
-            {/* Link 1: Início (Dashboard) */}
+            {/* Link 1: Início (Dashboard Geral) */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -87,7 +109,7 @@ export function Sidebar() {
               </TooltipContent>
             </Tooltip>
 
-            {/* Link 2: Registrar Lançamento */}
+            {/* Link 2: Registrar Lançamento / Transações */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -103,7 +125,7 @@ export function Sidebar() {
               </TooltipContent>
             </Tooltip>
 
-            {/* Link 3: Configurações */}
+            {/* Link 3: Configurações do Sistema e Perfil */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -119,7 +141,7 @@ export function Sidebar() {
               </TooltipContent>
             </Tooltip>
 
-            {/* Link 4: Criptomoedas (Movido para dentro do nav com TooltipProvider) */}
+            {/* Link 4: Módulo de Criptomoedas e Alertas */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -137,7 +159,7 @@ export function Sidebar() {
           </TooltipProvider>
         </nav>
 
-        {/* Seção inferior Desktop */}
+        {/* Bloco Inferior Desktop: Avatar do Usuário e Botão de Logout */}
         <nav className="mt-auto flex flex-col items-center gap-4 px-2 pb-16">
           {user && (
             <TooltipProvider>
@@ -176,9 +198,13 @@ export function Sidebar() {
         </nav>
       </aside>
 
-      {/* HEADER E MENU PARA CELULAR/TABLET (Telas menores que 'sm') */}
+      {/* ---------------------------------------------------- */}
+      {/* HEADER E MENU PARA CELULAR/TABLET (Visível apenas em telas menores que 'sm') */}
+      {/* ---------------------------------------------------- */}
       <div className="sm:hidden flex flex-col bg-zinc-950">
         <header className="sticky top-0 z-30 flex h-14 items-center px-4 border-b border-zinc-900 bg-zinc-950 gap-4">
+          
+          {/* Componente Sheet (Gaveta Lateral Mobile) */}
           <Sheet>
             <SheetTrigger asChild>
               <Button size="icon" variant="outline" className="sm:hidden border-zinc-800 bg-zinc-900 text-white hover:bg-zinc-800">
@@ -187,8 +213,11 @@ export function Sidebar() {
               </Button>
             </SheetTrigger>
             
+            {/* Conteúdo da Gaveta Mobile */}
             <SheetContent side="left" className="sm:max-w-xs flex flex-col h-full bg-zinc-950 border-r border-zinc-900 text-white">
               <nav className="grid gap-6 text-lg font-medium">
+                
+                {/* Logo Mobile */}
                 <Link
                   href="/dash-board"
                   className="flex h-10 w-10 bg-purple-600 rounded-full text-lg items-center justify-center text-white gap-2 shadow-lg shadow-purple-500/20"
@@ -196,6 +225,7 @@ export function Sidebar() {
                   <Wallet className="h-5 w-5" />
                 </Link>
 
+                {/* Links de navegação do menu mobile com texto descritivo */}
                 <Link
                   href="/dash-board"
                   className="flex items-center gap-4 px-2.5 text-zinc-400 hover:text-white"
@@ -220,7 +250,6 @@ export function Sidebar() {
                   Configurações
                 </Link>
 
-                {/* Link Criptomoedas adicionado no Menu Mobile */}
                 <Link
                   href="/dash-board/crypto"
                   className="flex items-center gap-4 px-2.5 text-zinc-400 hover:text-white"
@@ -230,7 +259,7 @@ export function Sidebar() {
                 </Link>
               </nav>
 
-              {/* SEÇÃO INFERIOR MOBILE */}
+              {/* Seção Inferior do Menu Mobile: Informações detalhadas do usuário e botão de saída */}
               {user && (
                 <div className="mt-auto pt-6 border-t border-zinc-900 flex flex-col gap-4">
                   <div className="flex items-center gap-3 px-2.5">
@@ -262,6 +291,7 @@ export function Sidebar() {
               )}
             </SheetContent>
           </Sheet>
+          
           <h2 className="text-white font-bold text-sm">CardFlow</h2>
         </header>
       </div>
