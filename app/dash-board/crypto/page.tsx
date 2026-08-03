@@ -6,6 +6,12 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { Coins, CheckCircle2, TrendingUp, TrendingDown, RefreshCw, Trash2, Search, Loader2, Bell } from "lucide-react";
 
+/**
+ * Página de Configuração de Alertas Web3 e Criptomoedas (CryptoSettingsPage).
+ * Permite ao usuário buscar e gerenciar sua lista customizada de ativos digitais, 
+ * definir faixas de preço de teto e piso para disparos de alertas de alta/queda, 
+ * consultar preços de mercado em tempo real via CoinGecko e testar notificações push nativas.
+ */
 export default function CryptoSettingsPage() {
   const [coin, setCoin] = useState("bitcoin");
   const [upperAlert, setUpperAlert] = useState("");
@@ -16,7 +22,7 @@ export default function CryptoSettingsPage() {
   const [successMessage, setSuccessMessage] = useState(false);
   const [currentMarketPrice, setCurrentMarketPrice] = useState<number | null>(null);
 
-  // Lista de moedas personalizadas do usuário
+  // Lista padrão de moedas customizadas gerenciadas pelo usuário
   const [customCoins, setCustomCoins] = useState<string[]>([
     "bitcoin",
     "ethereum",
@@ -24,14 +30,16 @@ export default function CryptoSettingsPage() {
     "axie-infinity",
   ]);
 
-  // Estados do Autocomplete
+  // Estados locais para o mecanismo de Autocomplete de criptomoedas
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Fecha o dropdown se clicar fora dele
+  /**
+   * Efeito para fechar o menu dropdown de autocomplete caso o usuário clique fora dele.
+   */
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -42,7 +50,9 @@ export default function CryptoSettingsPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // 1. Monitora o usuário logado e busca configurações salvas
+  /**
+   * Monitoramento de autenticação e carregamento de configurações salvas no Firestore.
+   */
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -63,7 +73,9 @@ export default function CryptoSettingsPage() {
     return () => unsubscribe();
   }, []);
 
-  // 2. Busca o preço atual apenas da moeda selecionada (Evita estourar o limite da API)
+  /**
+   * Consulta o preço atual de mercado apenas da moeda padrão selecionada (evita estouro de requisições na API).
+   */
   useEffect(() => {
     async function fetchCurrentPrice() {
       if (!coin) return;
@@ -88,7 +100,9 @@ export default function CryptoSettingsPage() {
     fetchCurrentPrice();
   }, [coin]);
 
-  // Sugestão automática de ± R$ 0,30
+  /**
+   * Aplicação automática de sugestão de teto e piso baseada em uma margem de ± R$ 0,30 do valor de mercado.
+   */
   const handleApplySuggestion = () => {
     if (currentMarketPrice !== null) {
       const upper = (currentMarketPrice + 0.30).toFixed(2);
@@ -98,7 +112,9 @@ export default function CryptoSettingsPage() {
     }
   };
 
-  // Autocomplete seguro buscando na API do CoinGecko
+  /**
+   * Mecanismo de Autocomplete com Debounce para busca de ativos na API pública do CoinGecko.
+   */
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
       if (searchQuery.trim().length < 2) {
@@ -125,7 +141,9 @@ export default function CryptoSettingsPage() {
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery]);
 
-  // Adicionar moeda selecionada corretamente pelo Autocomplete
+  /**
+   * Adiciona uma nova moeda selecionada via autocomplete à lista do usuário e salva no Firestore.
+   */
   const handleSelectCoinToAdd = async (coinId: string) => {
     if (customCoins.includes(coinId)) {
       alert("Esta moeda já está na sua lista!");
@@ -146,7 +164,9 @@ export default function CryptoSettingsPage() {
     }
   };
 
-  // Excluir moeda da lista
+  /**
+   * Remove uma moeda da lista ativa do usuário, garantindo a permanência de ao menos um ativo.
+   */
   const handleRemoveCoin = async (coinToRemove: string) => {
     if (customCoins.length <= 1) {
       alert("Você precisa manter pelo menos uma moeda na lista.");
@@ -166,7 +186,9 @@ export default function CryptoSettingsPage() {
     }
   };
 
-  // Função para testar ou solicitar permissão de notificações manualmente
+  /**
+   * Solicita permissões do navegador e testa o disparo de notificações push nativas.
+   */
   const handleTestNotification = async () => {
     if (!("Notification" in window)) {
       alert("Este navegador não suporta notificações de desktop.");
@@ -193,6 +215,9 @@ export default function CryptoSettingsPage() {
     }
   };
 
+  /**
+   * Salva as configurações de cripto e limites de alerta no Firestore.
+   */
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) return;
@@ -224,10 +249,10 @@ export default function CryptoSettingsPage() {
   };
 
   return (
-    <main className="sm:pl-14 p-6 sm:p-10 text-white min-h-screen bg-zinc-950 flex flex-col items-center justify-center">
+    <main className="sm:ml-14 p-6 sm:p-10 text-white min-h-screen bg-zinc-950 flex flex-col items-center justify-center">
       <div className="w-full max-w-xl space-y-6">
         
-        {/* Cabeçalho com o botão de testar notificações integrado de forma limpa */}
+        {/* Cabeçalho com o botão de testar notificações integrado */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-purple-500 mb-1">
@@ -293,7 +318,7 @@ export default function CryptoSettingsPage() {
             )}
           </div>
 
-          {/* Lista de moedas ativas atuais limpa e rápida */}
+          {/* Lista de moedas ativas atuais */}
           <div className="space-y-2 pt-2">
             <span className="text-xs text-zinc-500 block">Moedas na sua lista:</span>
             <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto pr-1">
